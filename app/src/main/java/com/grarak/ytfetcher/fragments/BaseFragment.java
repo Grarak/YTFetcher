@@ -234,7 +234,7 @@ public class BaseFragment extends Fragment {
     }
 
     public boolean deleteResult(YoutubeSearchResult result) {
-        int currentTrack = getMusicManager().getCurrentTrackPosition();
+        int currentTrack = getMusicManager().getTrackPosition();
         if (currentTrack >= 0) {
             if (getMusicManager().getTracks().get(currentTrack).equals(result)) {
                 Utils.toast(R.string.delete_not_possible, getActivity());

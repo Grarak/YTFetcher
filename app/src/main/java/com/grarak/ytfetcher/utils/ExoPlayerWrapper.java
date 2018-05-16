@@ -4,13 +4,17 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.PowerManager;
 
+import com.google.android.exoplayer2.DefaultRenderersFactory;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayerFactory;
+import com.google.android.exoplayer2.Format;
 import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.audio.AudioAttributes;
+import com.google.android.exoplayer2.audio.AudioRendererEventListener;
+import com.google.android.exoplayer2.decoder.DecoderCounters;
 import com.google.android.exoplayer2.source.ExtractorMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.source.TrackGroupArray;
@@ -32,15 +36,13 @@ public class ExoPlayerWrapper implements Player.EventListener {
         IDLE
     }
 
-    public interface OnPreparedListener {
+    public interface OnPlayerListener {
         void onPrepared(ExoPlayerWrapper exoPlayer);
-    }
 
-    public interface OnCompletionListener {
+        void onAudioSessionIdChanged(ExoPlayerWrapper exoPlayer, int id);
+
         void onCompletion(ExoPlayerWrapper exoPlayer);
-    }
 
-    public interface OnErrorListener {
         void onError(ExoPlayerWrapper exoPlayer, ExoPlaybackException error);
     }
 
@@ -49,15 +51,52 @@ public class ExoPlayerWrapper implements Player.EventListener {
     private PowerManager.WakeLock wakeLock;
 
     private final Object stateLock = new Object();
-    private State state;
+    private State state = State.IDLE;
 
-    private OnPreparedListener onPreparedListener;
-    private OnCompletionListener onCompletionListener;
-    private OnErrorListener onErrorListener;
+    private OnPlayerListener onPlayerListener;
+    private int sessionId;
 
     public ExoPlayerWrapper(Context context) {
-        exoPlayer = ExoPlayerFactory.newSimpleInstance(context, new DefaultTrackSelector());
+        DefaultRenderersFactory renderersFactory = new DefaultRenderersFactory(context,
+                null, DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON);
+        exoPlayer = ExoPlayerFactory.newSimpleInstance(renderersFactory, new DefaultTrackSelector());
         exoPlayer.addListener(this);
+        exoPlayer.addAudioDebugListener(new AudioRendererEventListener() {
+            @Override
+            public void onAudioEnabled(DecoderCounters counters) {
+            }
+
+            @Override
+            public void onAudioSessionId(int audioSessionId) {
+                if (sessionId != audioSessionId) {
+                    sessionId = audioSessionId;
+                    if (onPlayerListener != null) {
+                        onPlayerListener.onAudioSessionIdChanged(
+                                ExoPlayerWrapper.this, audioSessionId);
+                    }
+                }
+            }
+
+            @Override
+            public void onAudioDecoderInitialized(String decoderName,
+                                                  long initializedTimestampMs,
+                                                  long initializationDurationMs) {
+            }
+
+            @Override
+            public void onAudioInputFormatChanged(Format format) {
+            }
+
+            @Override
+            public void onAudioSinkUnderrun(int bufferSize,
+                                            long bufferSizeMs,
+                                            long elapsedSinceLastFeedMs) {
+            }
+
+            @Override
+            public void onAudioDisabled(DecoderCounters counters) {
+            }
+        });
         dataSourceFactory = new DefaultDataSourceFactory(context,
                 Util.getUserAgent(context, context.getString(R.string.app_name)));
 
@@ -78,7 +117,6 @@ public class ExoPlayerWrapper implements Player.EventListener {
         MediaSource mediaSource = new ExtractorMediaSource.Factory(dataSourceFactory)
                 .createMediaSource(Uri.fromFile(file));
         exoPlayer.prepare(mediaSource, true, true);
-
     }
 
     public long getCurrentPosition() {
@@ -115,16 +153,12 @@ public class ExoPlayerWrapper implements Player.EventListener {
         return getState() == State.PLAYING;
     }
 
-    public void setOnPreparedListener(OnPreparedListener onPreparedListener) {
-        this.onPreparedListener = onPreparedListener;
+    public int getAudioSessionId() {
+        return exoPlayer.getAudioSessionId();
     }
 
-    public void setOnCompletionListener(OnCompletionListener onCompletionListener) {
-        this.onCompletionListener = onCompletionListener;
-    }
-
-    public void setOnErrorListener(OnErrorListener onErrorListener) {
-        this.onErrorListener = onErrorListener;
+    public void setOnPlayerListener(OnPlayerListener onPlayerListener) {
+        this.onPlayerListener = onPlayerListener;
     }
 
     public void release() {
@@ -150,16 +184,18 @@ public class ExoPlayerWrapper implements Player.EventListener {
     public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
         switch (playbackState) {
             case Player.STATE_READY:
-                if (getState() == State.PREPARING && onPreparedListener != null) {
+                if (getState() == State.PREPARING) {
                     setState(State.IDLE);
-                    onPreparedListener.onPrepared(this);
+                    if (onPlayerListener != null) {
+                        onPlayerListener.onPrepared(this);
+                    }
                 }
                 break;
             case Player.STATE_ENDED:
                 if (getDuration() == 0 || getCurrentPosition() != 0) {
                     setState(State.IDLE);
-                    if (onCompletionListener != null) {
-                        onCompletionListener.onCompletion(this);
+                    if (onPlayerListener != null) {
+                        onPlayerListener.onCompletion(this);
                     }
                 }
                 break;
@@ -176,8 +212,8 @@ public class ExoPlayerWrapper implements Player.EventListener {
 
     @Override
     public void onPlayerError(ExoPlaybackException error) {
-        if (onErrorListener != null) {
-            onErrorListener.onError(this, error);
+        if (onPlayerListener != null) {
+            onPlayerListener.onError(this, error);
         }
     }
 

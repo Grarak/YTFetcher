@@ -12,6 +12,7 @@ import com.grarak.ytfetcher.utils.server.user.User;
 import com.grarak.ytfetcher.utils.server.youtube.YoutubeSearchResult;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class MusicManager {
@@ -77,17 +78,13 @@ public class MusicManager {
     }
 
     public void play(YoutubeSearchResult result) {
-        synchronized (this) {
-            if (service != null) {
-                service.playMusic(user, result);
-            }
-        }
+        play(Collections.singletonList(result), 0);
     }
 
-    public void play(List<YoutubeSearchResult> results, int positon) {
+    public void play(List<YoutubeSearchResult> results, int position) {
         synchronized (this) {
             if (service != null) {
-                service.playMusic(user, results, positon);
+                service.playMusic(user, results, position);
             }
         }
     }
@@ -125,19 +122,10 @@ public class MusicManager {
         return false;
     }
 
-    public int getCurrentTrackPosition() {
+    public int getTrackPosition() {
         synchronized (this) {
             if (service != null) {
-                return service.getCurrentTrackPosition();
-            }
-        }
-        return -1;
-    }
-
-    public int getPreparingTrackPositon() {
-        synchronized (this) {
-            if (service != null) {
-                return service.getPreparingTrackPosition();
+                return service.getTrackPosition();
             }
         }
         return -1;
@@ -177,5 +165,14 @@ public class MusicManager {
             }
         }
         return false;
+    }
+
+    public int getAudioSessionId() {
+        synchronized (this) {
+            if (service != null) {
+                return service.getAudioSessionId();
+            }
+        }
+        return 0;
     }
 }

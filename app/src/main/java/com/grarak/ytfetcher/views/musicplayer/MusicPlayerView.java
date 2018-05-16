@@ -2,6 +2,8 @@ package com.grarak.ytfetcher.views.musicplayer;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
@@ -14,7 +16,7 @@ import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
+import android.widget.FrameLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -23,20 +25,19 @@ import com.grarak.ytfetcher.R;
 import com.grarak.ytfetcher.utils.MusicManager;
 import com.grarak.ytfetcher.utils.Utils;
 import com.grarak.ytfetcher.utils.server.youtube.YoutubeSearchResult;
+import com.grarak.ytfetcher.views.MusicVisualizerView;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class MusicPlayerView extends LinearLayout {
+public class MusicPlayerView extends FrameLayout {
 
     private ViewPager viewPager;
     private TextView titleView;
     private TextView positionTextView;
     private AppCompatSeekBar seekBar;
-    private View previousView;
     private FloatingActionButton playPauseView;
-    private View nextView;
     private View controls;
     private View progressView;
 
@@ -49,6 +50,10 @@ public class MusicPlayerView extends LinearLayout {
     private final List<YoutubeSearchResult> tracks = new ArrayList<>();
     private long duration;
     private AtomicBoolean playing = new AtomicBoolean();
+
+    private int seassionId;
+    private boolean resetsessionId;
+    private MusicVisualizerView visualizer;
 
     public MusicPlayerView(Context context) {
         this(context, null);
@@ -68,10 +73,11 @@ public class MusicPlayerView extends LinearLayout {
         positionTextView = findViewById(R.id.position_text);
         seekBar = findViewById(R.id.seekbar);
         controls = findViewById(R.id.controls_view);
-        previousView = findViewById(R.id.previous_btn);
+        View previousView = findViewById(R.id.previous_btn);
         playPauseView = findViewById(R.id.play_pause_btn);
-        nextView = findViewById(R.id.next_btn);
+        View nextView = findViewById(R.id.next_btn);
         progressView = findViewById(R.id.progress);
+        visualizer = findViewById(R.id.visualizer);
 
         playDrawable = ContextCompat.getDrawable(context, R.drawable.ic_play);
         pauseDrawable = ContextCompat.getDrawable(context, R.drawable.ic_pause);
@@ -107,6 +113,7 @@ public class MusicPlayerView extends LinearLayout {
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
+                resetsessionId = true;
                 musicManager.seekTo(seekBar.getProgress() * 1000);
                 if (playing.get()) {
                     startCounter();
@@ -128,12 +135,14 @@ public class MusicPlayerView extends LinearLayout {
     }
 
     private void startCounter() {
+        visualizer.setEnabled(true);
         if (getHandler() != null) {
-            getHandler().postDelayed(counter, 500);
+            getHandler().postDelayed(counter, 250);
         }
     }
 
     private void stopCounter() {
+        visualizer.setEnabled(false);
         if (getHandler() != null) {
             getHandler().removeCallbacks(counter);
         }
@@ -144,6 +153,10 @@ public class MusicPlayerView extends LinearLayout {
         public void run() {
             duration = musicManager.getDuration() / 1000;
             if (duration > 0) {
+                if (resetsessionId) {
+                    onAudioSessionIdChanged(seassionId);
+                    resetsessionId = false;
+                }
                 long position = musicManager.getCurrentPosition() / 1000;
                 positionTextView.setText(
                         String.format(
@@ -246,10 +259,62 @@ public class MusicPlayerView extends LinearLayout {
         playPauseView.setImageDrawable(playDrawable);
         playing.set(false);
         counter.run();
+        resetsessionId = true;
+    }
+
+    public void onAudioSessionIdChanged(int id) {
+        seassionId = id;
+        visualizer.setAudioSessionId(id);
     }
 
     void onNoMusic() {
         stopCounter();
         playing.set(false);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Parcelable state) {
+        SavedState savedState = (SavedState) state;
+        super.onRestoreInstanceState(savedState.getSuperState());
+        onAudioSessionIdChanged(savedState.sessionId);
+    }
+
+    @Nullable
+    @Override
+    protected Parcelable onSaveInstanceState() {
+        Parcelable parcelable = super.onSaveInstanceState();
+        SavedState savedState = new SavedState(parcelable);
+        savedState.sessionId = seassionId;
+        return savedState;
+    }
+
+    private static class SavedState extends BaseSavedState {
+        private int sessionId;
+
+        SavedState(Parcelable superState) {
+            super(superState);
+        }
+
+        private SavedState(Parcel in) {
+            super(in);
+            sessionId = in.readInt();
+        }
+
+        @Override
+        public void writeToParcel(Parcel out, int flags) {
+            super.writeToParcel(out, flags);
+            out.writeInt(sessionId);
+        }
+
+        public static final Parcelable.Creator<SavedState> CREATOR
+                = new Parcelable.Creator<SavedState>() {
+            public SavedState createFromParcel(Parcel in) {
+                return new SavedState(in);
+            }
+
+            public SavedState[] newArray(int size) {
+                return new SavedState[size];
+            }
+        };
     }
 }

@@ -34,7 +34,7 @@
     </FrameLayout>
 
     <com.grarak.ytfetcher.views.musicplayer.MusicPlayerParentView
-        android:id="@+id/musicplayer_view"
+        android:id="@+id/musicplayerparent_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 

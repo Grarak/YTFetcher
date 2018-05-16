@@ -1,6 +1,8 @@
 package com.grarak.ytfetcher;
 
+import android.Manifest;
 import android.app.Activity;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.StringRes;
@@ -57,7 +59,7 @@ public class MainActivity extends BaseActivity implements MusicPlayerListener {
         viewPager = findViewById(R.id.viewpager);
         bottomNavigationView = findViewById(R.id.bottom_navigation);
         slidingUpPanelLayout = findViewById(R.id.sliding_up_view);
-        musicPlayerView = findViewById(R.id.musicplayer_view);
+        musicPlayerView = findViewById(R.id.musicplayerparent_view);
 
         items.add(new FragmentItem(HomeFragment.class, R.drawable.ic_home, R.string.home));
         items.add(new FragmentItem(PlaylistsFragment.class, R.drawable.ic_list, R.string.playlists));
@@ -107,6 +109,10 @@ public class MainActivity extends BaseActivity implements MusicPlayerListener {
         }
 
         viewPager.post(() -> onPageChanged(currentPage));
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, 0);
+        }
     }
 
     private BottomNavigationView.OnNavigationItemSelectedListener onNavigationItemSelectedListener =
@@ -225,8 +231,13 @@ public class MainActivity extends BaseActivity implements MusicPlayerListener {
     @Override
     protected void onPause() {
         super.onPause();
-        musicPlayerView.onNoMusic();
         musicManager.onPause();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        musicPlayerView.onNoMusic();
     }
 
     public MusicManager getMusicManager() {
@@ -251,13 +262,14 @@ public class MainActivity extends BaseActivity implements MusicPlayerListener {
         slidingUpPanelLayout.setTouchEnabled(true);
         if (musicManager.isPlaying()) {
             musicPlayerView.onPlay(
-                    musicManager.getTracks(), musicManager.getCurrentTrackPosition());
+                    musicManager.getTracks(), musicManager.getTrackPosition());
+            musicPlayerView.onAudioSessionIdChanged(musicManager.getAudioSessionId());
         } else if (musicManager.isPreparing()) {
             musicPlayerView.onFetch(
-                    musicManager.getTracks(), musicManager.getPreparingTrackPositon());
-        } else if (musicManager.getCurrentTrackPosition() >= 0) {
+                    musicManager.getTracks(), musicManager.getTrackPosition());
+        } else if (musicManager.getTrackPosition() >= 0) {
             musicPlayerView.onPause(
-                    musicManager.getTracks(), musicManager.getCurrentTrackPosition());
+                    musicManager.getTracks(), musicManager.getTrackPosition());
         } else {
             musicPlayerView.onNoMusic();
             slidingUpPanelLayout.setPanelState(
@@ -267,7 +279,7 @@ public class MainActivity extends BaseActivity implements MusicPlayerListener {
     }
 
     @Override
-    public void onFetchingSong(List<YoutubeSearchResult> results, int position) {
+    public void onPreparing(List<YoutubeSearchResult> results, int position) {
         musicPlayerView.onFetch(results, position);
         slidingUpPanelLayout.setTouchEnabled(true);
     }
@@ -294,6 +306,11 @@ public class MainActivity extends BaseActivity implements MusicPlayerListener {
     public void onPause(List<YoutubeSearchResult> results, int position) {
         musicPlayerView.onPause(results, position);
         slidingUpPanelLayout.setTouchEnabled(true);
+    }
+
+    @Override
+    public void onAudioSessionIdChanged(int id) {
+        musicPlayerView.onAudioSessionIdChanged(id);
     }
 
     @Override

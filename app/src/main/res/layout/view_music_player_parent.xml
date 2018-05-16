@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <com.grarak.ytfetcher.views.musicplayer.MusicPlayerView
+        android:id="@+id/musicplayer_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <com.grarak.ytfetcher.views.musicplayer.MusicPlayerHeaderView
+        android:id="@+id/musicplayerheader_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+</merge>

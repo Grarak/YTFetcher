@@ -44,9 +44,15 @@
         app:autoSizeMaxTextSize="16sp"
         app:autoSizeTextType="uniform" />
 
-    <android.support.v7.widget.AppCompatImageView
-        android:id="@+id/thumbnail"
+    <FrameLayout
         android:layout_width="70dp"
         android:layout_height="match_parent"
-        android:scaleType="center" />
+        android:background="?android:attr/windowBackground">
+
+        <android.support.v7.widget.AppCompatImageView
+            android:id="@+id/thumbnail"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="center" />
+    </FrameLayout>
 </merge>

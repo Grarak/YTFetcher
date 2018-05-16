@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
+import android.view.LayoutInflater;
 import android.widget.FrameLayout;
 
 import com.grarak.ytfetcher.R;
@@ -29,6 +30,8 @@ public class MusicPlayerParentView extends FrameLayout {
     public MusicPlayerParentView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
 
+        LayoutInflater.from(context).inflate(R.layout.view_music_player_parent, this);
+
         TypedArray a = context.obtainStyledAttributes(attrs,
                 R.styleable.MusicPlayerParentView, defStyleAttr, 0);
         int collapsedHeight = a.getDimensionPixelSize(R.styleable.MusicPlayerParentView_collapsedHeight,
@@ -36,11 +39,9 @@ public class MusicPlayerParentView extends FrameLayout {
 
         a.recycle();
 
-        playerView = new MusicPlayerView(context);
-        addView(playerView, LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
-
-        headerView = new MusicPlayerHeaderView(context);
-        addView(headerView, LayoutParams.MATCH_PARENT, collapsedHeight);
+        playerView = findViewById(R.id.musicplayer_view);
+        headerView = findViewById(R.id.musicplayerheader_view);
+        headerView.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, collapsedHeight));
 
         headerView.setOnClickListener(v -> {
             if (getParent() instanceof SlidingUpPanelLayout) {
@@ -79,6 +80,10 @@ public class MusicPlayerParentView extends FrameLayout {
     public void onPause(List<YoutubeSearchResult> results, int position) {
         headerView.onPause(results, position);
         playerView.onPause(results, position);
+    }
+
+    public void onAudioSessionIdChanged(int id) {
+        playerView.onAudioSessionIdChanged(id);
     }
 
     public void onNoMusic() {
