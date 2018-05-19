@@ -88,5 +88,19 @@
     <string name="no">No</string>
     <string name="no_downloads">No downloads</string>
     <string name="history">History</string>
+    <string name="equalizer">Equalizer</string>
     <string name="no_history">No history</string>
+    <string name="hz">%dHz</string>
+    <string name="db">%ddB</string>
+    <string name="profile">Profile</string>
+    <string name="hall">Hall</string>
+    <string name="bass_boost">Bass boost</string>
+    <string name="surround_sound">Surround sound</string>
+    <string name="none">None</string>
+    <string name="small_room">Small room</string>
+    <string name="medium_room">Medium room</string>
+    <string name="large_room">Large room</string>
+    <string name="medium_hal">Medium hal</string>
+    <string name="large_hal">Large hal</string>
+    <string name="plate">Plate</string>
 </resources>

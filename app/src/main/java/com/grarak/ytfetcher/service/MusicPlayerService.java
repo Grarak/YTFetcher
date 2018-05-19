@@ -15,6 +15,7 @@ import android.support.annotation.Nullable;
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.audio.AudioAttributes;
+import com.grarak.ytfetcher.utils.EqualizerManager;
 import com.grarak.ytfetcher.utils.ExoPlayerWrapper;
 import com.grarak.ytfetcher.utils.server.GenericCallback;
 import com.grarak.ytfetcher.utils.server.Status;
@@ -45,6 +46,7 @@ public class MusicPlayerService extends Service
     private YoutubeServer youtubeServer;
     private HistoryServer historyServer;
     private ExoPlayerWrapper exoPlayer;
+    private EqualizerManager equalizerManager;
     private MusicPlayerNotification notification;
     private MusicPlayerListener listener;
 
@@ -207,7 +209,9 @@ public class MusicPlayerService extends Service
     }
 
     public boolean isPlaying() {
-        return exoPlayer.isPlaying();
+        synchronized (trackLock) {
+            return exoPlayer.isPlaying() && trackPosition >= 0;
+        }
     }
 
     public int getTrackPosition() {
@@ -230,12 +234,16 @@ public class MusicPlayerService extends Service
 
     public boolean isPreparing() {
         synchronized (trackLock) {
-            return preparing;
+            return preparing && trackPosition >= 0;
         }
     }
 
     public int getAudioSessionId() {
         return exoPlayer.getAudioSessionId();
+    }
+
+    public EqualizerManager getEqualizerManager() {
+        return equalizerManager;
     }
 
     private void requestAudioFocus() {
@@ -303,6 +311,7 @@ public class MusicPlayerService extends Service
 
     @Override
     public void onAudioSessionIdChanged(ExoPlayerWrapper exoPlayer, int id) {
+        equalizerManager.setAudioSessionId(id);
         if (listener != null) {
             listener.onAudioSessionIdChanged(id);
         }
@@ -364,6 +373,8 @@ public class MusicPlayerService extends Service
                     .build();
         }
 
+        equalizerManager = new EqualizerManager(this);
+
         notification = new MusicPlayerNotification(this);
 
         IntentFilter filter = new IntentFilter();
@@ -381,6 +392,7 @@ public class MusicPlayerService extends Service
 
         notification.stop();
 
+        equalizerManager.release();
         exoPlayer.release();
         youtubeServer.close();
         historyServer.close();

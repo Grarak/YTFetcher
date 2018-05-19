@@ -64,10 +64,10 @@ public class DownloadsFragment extends RecyclerViewFragment<TitleFragment> {
 
         if (server != null) return;
 
+        showProgress();
         server = new YoutubeServer(getActivity());
 
         ids.clear();
-        List<String> missing = new ArrayList<>();
         for (File file : files) {
             if (file.getName().endsWith(".downloading")) {
                 continue;
@@ -78,12 +78,7 @@ public class DownloadsFragment extends RecyclerViewFragment<TitleFragment> {
                 continue;
             }
 
-            String id = file.getName().substring(0, index);
-            YoutubeSearchResult result = YoutubeSearchResult.restore(id, getActivity());
-            if (result == null) {
-                missing.add(id);
-            }
-            ids.add(id);
+            ids.add(file.getName().substring(0, index));
         }
 
         if (ids.size() == 0) {
@@ -92,13 +87,8 @@ public class DownloadsFragment extends RecyclerViewFragment<TitleFragment> {
             return;
         }
 
-        if (missing.size() == 0) {
-            addItems();
-            return;
-        }
-
         AtomicInteger fetchedCount = new AtomicInteger();
-        for (String id : missing) {
+        for (String id : ids) {
             Youtube youtube = new Youtube();
             youtube.apikey = getUser().apikey;
             youtube.id = id;
@@ -107,15 +97,17 @@ public class DownloadsFragment extends RecyclerViewFragment<TitleFragment> {
                 @Override
                 public void onSuccess(YoutubeSearchResult result) {
                     result.save(getActivity());
-                    if (fetchedCount.incrementAndGet() == missing.size()) {
+                    if (fetchedCount.incrementAndGet() == ids.size()) {
                         addItems();
+                        dismissProgress();
                     }
                 }
 
                 @Override
                 public void onFailure(int code) {
-                    if (fetchedCount.incrementAndGet() == missing.size()) {
+                    if (fetchedCount.incrementAndGet() == ids.size()) {
                         addItems();
+                        dismissProgress();
                     }
                 }
             });

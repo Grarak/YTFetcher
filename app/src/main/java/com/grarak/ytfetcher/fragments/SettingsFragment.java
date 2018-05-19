@@ -50,6 +50,11 @@ public class SettingsFragment extends RecyclerViewFragment<TitleFragment> {
         history.setText(getString(R.string.history));
         recyclerViewItems.add(history);
 
+        ButtonItem equalizer = new ButtonItem(
+                v -> showForegroundFragment(new EqualizerFragment()));
+        equalizer.setText(getString(R.string.equalizer));
+        recyclerViewItems.add(equalizer);
+
         SwitchItem darkTheme = new SwitchItem(checked -> {
             Settings.setDarkTheme(checked, getActivity());
             Intent intent = new Intent(getActivity(), LoginActivity.class);

@@ -8,7 +8,7 @@ import android.support.annotation.DrawableRes;
 import android.support.annotation.StringRes;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
@@ -102,8 +102,7 @@ public class MainActivity extends BaseActivity implements MusicPlayerListener {
 
         slidingUpPanelLayout.post(() -> slidingUpPanelLayout.getChildAt(1).setOnClickListener(null));
 
-        Fragment foregroundFragment = getSupportFragmentManager()
-                .findFragmentByTag("foreground_fragment");
+        Fragment foregroundFragment = getForegroundFragment();
         if (foregroundFragment != null) {
             showForegroundFragment(foregroundFragment);
         }
@@ -184,6 +183,10 @@ public class MainActivity extends BaseActivity implements MusicPlayerListener {
         }
     }
 
+    private Fragment getForegroundFragment() {
+        return getSupportFragmentManager().findFragmentByTag("foreground_fragment");
+    }
+
     @Override
     public void onBackPressed() {
         if (slidingUpPanelLayout.getPanelState() ==
@@ -192,8 +195,7 @@ public class MainActivity extends BaseActivity implements MusicPlayerListener {
             return;
         }
 
-        Fragment foregroundFragment = getSupportFragmentManager()
-                .findFragmentByTag("foreground_fragment");
+        Fragment foregroundFragment = getForegroundFragment();
         if (foregroundFragment != null) {
             removeForegroundFragment(foregroundFragment);
             return;
@@ -322,7 +324,7 @@ public class MainActivity extends BaseActivity implements MusicPlayerListener {
         musicManager.restart();
     }
 
-    private static class ViewPagerAdapter extends FragmentStatePagerAdapter {
+    private static class ViewPagerAdapter extends FragmentPagerAdapter {
 
         private final Activity activity;
         private final List<FragmentItem> fragmentItems;

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <array name="reverb_presets">
+        <item>@string/none</item>
+        <item>@string/small_room</item>
+        <item>@string/medium_room</item>
+        <item>@string/large_room</item>
+        <item>@string/medium_hal</item>
+        <item>@string/large_hal</item>
+        <item>@string/plate</item>
+    </array>
+</resources>

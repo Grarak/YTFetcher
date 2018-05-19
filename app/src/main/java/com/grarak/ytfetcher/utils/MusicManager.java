@@ -175,4 +175,13 @@ public class MusicManager {
         }
         return 0;
     }
+
+    public EqualizerManager getEqualizerManager() {
+        synchronized (this) {
+            if (service != null) {
+                return service.getEqualizerManager();
+            }
+        }
+        return null;
+    }
 }

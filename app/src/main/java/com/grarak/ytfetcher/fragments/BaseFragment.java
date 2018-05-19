@@ -20,6 +20,7 @@ import android.view.ViewTreeObserver;
 import com.grarak.ytfetcher.MainActivity;
 import com.grarak.ytfetcher.R;
 import com.grarak.ytfetcher.service.DownloadService;
+import com.grarak.ytfetcher.utils.EqualizerManager;
 import com.grarak.ytfetcher.utils.MusicManager;
 import com.grarak.ytfetcher.utils.Utils;
 import com.grarak.ytfetcher.utils.server.GenericCallback;
@@ -114,6 +115,10 @@ public class BaseFragment extends Fragment {
 
     public MusicManager getMusicManager() {
         return ((MainActivity) getActivity()).getMusicManager();
+    }
+
+    public EqualizerManager getEqualizerManager() {
+        return getMusicManager().getEqualizerManager();
     }
 
     public void showForegroundFragment(Fragment fragment) {

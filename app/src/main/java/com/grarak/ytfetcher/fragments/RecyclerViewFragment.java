@@ -1,6 +1,7 @@
 package com.grarak.ytfetcher.fragments;
 
 import android.animation.ValueAnimator;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
@@ -19,6 +20,7 @@ import com.grarak.ytfetcher.utils.Utils;
 import com.grarak.ytfetcher.views.recyclerview.RecyclerViewAdapter;
 import com.grarak.ytfetcher.views.recyclerview.RecyclerViewItem;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,6 +43,8 @@ public abstract class RecyclerViewFragment<TF extends BaseFragment>
 
     private TF titleFragment;
     private View titleContent;
+
+    private ItemsLoader<TF> itemsLoader;
 
     @LayoutRes
     protected int getLayoutXml() {
@@ -136,6 +140,9 @@ public abstract class RecyclerViewFragment<TF extends BaseFragment>
         recyclerView = rootView.findViewById(R.id.recyclerview);
         recyclerView.setHasFixedSize(true);
 
+        recyclerView.setLayoutManager(layoutManager = createLayoutManager());
+        recyclerView.setAdapter(adapter == null ? adapter = createAdapter() : adapter);
+
         messageView = rootView.findViewById(R.id.message);
         progressView = rootView.findViewById(R.id.progress);
         if (messageView != null) {
@@ -153,6 +160,8 @@ public abstract class RecyclerViewFragment<TF extends BaseFragment>
                     .replace(R.id.content_title, titleFragment, "title_fragment").commit();
         }
 
+        init(savedInstanceState);
+
         if (savedInstanceState != null) {
             if (savedInstanceState.getBoolean("progress_visible")) {
                 showProgress();
@@ -162,21 +171,54 @@ public abstract class RecyclerViewFragment<TF extends BaseFragment>
             } else {
                 dismissProgress();
             }
+            post();
+        } else if (itemsLoader == null) {
+            showProgress();
+            itemsLoader = new ItemsLoader<>(this);
+            itemsLoader.execute();
+        }
+        return rootView;
+    }
+
+    private static class ItemsLoader<TF extends BaseFragment> extends AsyncTask<Void, Void, List<RecyclerViewItem>> {
+
+        private WeakReference<RecyclerViewFragment<TF>> fragmentRef;
+
+        private ItemsLoader(RecyclerViewFragment<TF> fragment) {
+            fragmentRef = new WeakReference<>(fragment);
         }
 
-        init(savedInstanceState);
-        if (items.size() == 0) {
-            initItems(items);
+        @Override
+        protected List<RecyclerViewItem> doInBackground(Void... voids) {
+            RecyclerViewFragment<TF> fragment = fragmentRef.get();
+            if (fragment != null) {
+                List<RecyclerViewItem> items = new ArrayList<>();
+                fragment.initItems(items);
+                return items;
+            }
+            return null;
         }
+
+        @Override
+        protected void onPostExecute(List<RecyclerViewItem> recyclerViewItems) {
+            super.onPostExecute(recyclerViewItems);
+
+            RecyclerViewFragment<TF> fragment = fragmentRef.get();
+            if (fragment != null && recyclerViewItems != null) {
+                fragment.items.addAll(recyclerViewItems);
+                fragment.adapter.notifyDataSetChanged();
+                fragment.post();
+                fragment.dismissProgress();
+            }
+        }
+    }
+
+    private void post() {
         if (messageView != null) {
             messageView.setVisibility(
                     progressView.getVisibility() == View.INVISIBLE &&
                             itemsSize() == 0 ? View.VISIBLE : View.INVISIBLE);
         }
-
-        recyclerView.setLayoutManager(layoutManager = createLayoutManager());
-        recyclerView.setAdapter(adapter == null ? adapter = createAdapter() : adapter);
-        return rootView;
     }
 
     @Override
