@@ -29,7 +29,7 @@ class MusicPlayerParentView @JvmOverloads constructor(context: Context, attrs: A
         headerView = findViewById(R.id.musicplayerheader_view)
         headerView.layoutParams = FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, collapsedHeight)
 
-        headerView.setOnClickListener { v ->
+        headerView.setOnClickListener {
             if (parent is SlidingUpPanelLayout) {
                 val slidingUpPanelLayout = parent as SlidingUpPanelLayout
                 if (slidingUpPanelLayout.isTouchEnabled) {
