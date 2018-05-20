@@ -219,7 +219,8 @@ public class MusicPlayerView extends FrameLayout {
             viewPager.setAdapter(adapter);
             viewPager.removeOnPageChangeListener(onPageChangeListener);
             viewPager.setCurrentItem(position);
-            titleView.setText(results.get(position).title);
+            String[] titleFormatted = Utils.formatResultTitle(results.get(position));
+            titleView.setText(String.format("%s\n%s", titleFormatted[0], titleFormatted[1]));
             viewPager.addOnPageChangeListener(onPageChangeListener);
         }
     }

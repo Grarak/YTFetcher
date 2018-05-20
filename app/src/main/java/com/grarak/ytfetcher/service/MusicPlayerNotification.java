@@ -14,6 +14,7 @@ import android.support.v4.app.NotificationCompat;
 import com.bumptech.glide.Glide;
 import com.grarak.ytfetcher.LoginActivity;
 import com.grarak.ytfetcher.R;
+import com.grarak.ytfetcher.utils.Utils;
 import com.grarak.ytfetcher.utils.server.youtube.YoutubeSearchResult;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -125,25 +126,15 @@ public class MusicPlayerNotification {
 
         PendingIntent contentIntent = PendingIntent.getActivity(service, 0, intent, 0);
 
-        String title = result.title;
-        String contentText = result.id;
-        if (title.length() > 20) {
-            String tmp = title.substring(20);
-            int whitespaceIndex = tmp.indexOf(' ');
-            if (whitespaceIndex >= 0) {
-                int firstWhitespace = 20 + tmp.indexOf(' ');
-                contentText = title.substring(firstWhitespace + 1);
-                title = title.substring(0, firstWhitespace);
-            }
-        }
+        String[] titleFormatted = Utils.formatResultTitle(result);
 
         android.support.v4.media.app.NotificationCompat.MediaStyle mediaStyle =
                 new android.support.v4.media.app.NotificationCompat.DecoratedMediaCustomViewStyle();
         mediaStyle.setShowActionsInCompactView(2);
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(service, NOTIFICATION_CHANNEL)
-                .setContentTitle(title)
-                .setContentText(contentText)
+        return new NotificationCompat.Builder(service, NOTIFICATION_CHANNEL)
+                .setContentTitle(titleFormatted[0])
+                .setContentText(titleFormatted[1])
                 .setSubText(result.duration)
                 .setSmallIcon(R.drawable.ic_bookmark_music)
                 .setLargeIcon(bitmap)
@@ -163,7 +154,6 @@ public class MusicPlayerNotification {
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setStyle(mediaStyle);
-        return builder;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
