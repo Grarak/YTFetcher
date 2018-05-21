@@ -12,7 +12,8 @@ import android.util.TypedValue
 import android.view.View
 import com.grarak.ytfetcher.R
 
-class MusicVisualizerView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) : View(context, attrs, defStyleAttr), Visualizer.OnDataCaptureListener {
+class MusicVisualizerView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
+    : View(context, attrs, defStyleAttr), Visualizer.OnDataCaptureListener {
 
     private var waveform: ByteArray? = null
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -87,7 +88,6 @@ class MusicVisualizerView @JvmOverloads constructor(context: Context, attrs: Att
         } catch (e: Exception) {
             e.printStackTrace()
         }
-
     }
 
     override fun setEnabled(enabled: Boolean) {

@@ -11,6 +11,7 @@ buildscript {
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
+apply plugin: 'org.jetbrains.kotlin.android.extensions'
 apply plugin: 'io.fabric'
 
 repositories {
@@ -47,6 +48,10 @@ repositories {
     maven {
         url "https://jitpack.io"
     }
+}
+
+androidExtensions {
+    experimental = true
 }
 
 dependencies {

@@ -2,7 +2,6 @@ package com.grarak.ytfetcher.views.musicplayer
 
 import android.content.Context
 import android.graphics.drawable.Drawable
-import android.os.Parcel
 import android.os.Parcelable
 import android.support.design.widget.FloatingActionButton
 import android.support.v4.content.ContextCompat
@@ -23,10 +22,12 @@ import com.grarak.ytfetcher.utils.MusicManager
 import com.grarak.ytfetcher.utils.Utils
 import com.grarak.ytfetcher.utils.server.youtube.YoutubeSearchResult
 import com.grarak.ytfetcher.views.MusicVisualizerView
+import kotlinx.android.parcel.Parcelize
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 
-class MusicPlayerView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) : FrameLayout(context, attrs, defStyleAttr) {
+class MusicPlayerView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
+    : FrameLayout(context, attrs, defStyleAttr) {
 
     private val viewPager: ViewPager
     private val titleView: TextView
@@ -254,35 +255,10 @@ class MusicPlayerView @JvmOverloads constructor(context: Context, attrs: Attribu
 
     override fun onSaveInstanceState(): Parcelable? {
         val parcelable = super.onSaveInstanceState()
-        val savedState = SavedState(parcelable)
-        savedState.sessionId = seassionId
-        return savedState
+        return SavedState(seassionId, parcelable)
     }
 
-    private class SavedState : View.BaseSavedState {
-        var sessionId: Int = 0
-
-        internal constructor(superState: Parcelable) : super(superState)
-
-        private constructor(`in`: Parcel) : super(`in`) {
-            sessionId = `in`.readInt()
-        }
-
-        override fun writeToParcel(out: Parcel, flags: Int) {
-            super.writeToParcel(out, flags)
-            out.writeInt(sessionId)
-        }
-
-        companion object {
-            val CREATOR: Parcelable.Creator<SavedState> = object : Parcelable.Creator<SavedState> {
-                override fun createFromParcel(`in`: Parcel): SavedState {
-                    return SavedState(`in`)
-                }
-
-                override fun newArray(size: Int): Array<SavedState?> {
-                    return arrayOfNulls(size)
-                }
-            }
-        }
-    }
+    @Parcelize
+    private class SavedState(val sessionId: Int = 0, internal val superState: Parcelable)
+        : View.BaseSavedState(superState)
 }
