@@ -232,13 +232,13 @@ class MusicPlayerService : Service(), AudioManager.OnAudioFocusChangeListener, E
                     AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN)
         }
         synchronized(focusLock) {
-            if (ret == AudioManager.AUDIOFOCUS_REQUEST_FAILED) {
-                playbackDelayed = false
-            } else if (ret == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-                playbackDelayed = false
-                playMusic()
-            } else if (ret == AudioManager.AUDIOFOCUS_REQUEST_DELAYED) {
-                playbackDelayed = true
+            when (ret) {
+                AudioManager.AUDIOFOCUS_REQUEST_FAILED -> playbackDelayed = false
+                AudioManager.AUDIOFOCUS_REQUEST_GRANTED -> {
+                    playbackDelayed = false
+                    playMusic()
+                }
+                AudioManager.AUDIOFOCUS_REQUEST_DELAYED -> playbackDelayed = true
             }
         }
     }

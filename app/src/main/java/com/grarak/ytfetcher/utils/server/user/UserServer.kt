@@ -24,7 +24,7 @@ class UserServer(url: String) : Server(url) {
         fun onFailure(code: Int)
     }
 
-    constructor(context: Context) : this(Settings.getServerUrl(context)) {}
+    constructor(context: Context) : this(Settings.getServerUrl(context))
 
     fun signUp(user: User, userCallback: UserCallback) {
         post(getUrl("users/signup"), user.toString(), object : Request.RequestCallback {

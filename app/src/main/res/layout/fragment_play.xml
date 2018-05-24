@@ -28,7 +28,6 @@
         android:layout_gravity="center_vertical"
         android:layout_marginLeft="@dimen/fab_margin"
         android:layout_marginStart="@dimen/fab_margin"
-        android:tint="@android:color/white"
         app:fabSize="mini"
         app:srcCompat="@drawable/ic_download" />
 

@@ -149,7 +149,7 @@ class ExoPlayerWrapper(context: Context) : Player.EventListener {
                 setState(State.IDLE)
                 onPlayerListener?.onPrepared(this)
             }
-            Player.STATE_ENDED -> if (duration == 0L || currentPosition != 0L) {
+            Player.STATE_ENDED -> if (playWhenReady && (duration == 0L || currentPosition != 0L)) {
                 setState(State.IDLE)
                 onPlayerListener?.onCompletion(this)
             }

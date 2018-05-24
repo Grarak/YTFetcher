@@ -26,8 +26,8 @@ android {
         applicationId "com.grarak.ytfetcher"
         minSdkVersion 16
         targetSdkVersion 27
-        versionCode 16
-        versionName "0.5.1"
+        versionCode 18
+        versionName "0.5.3"
         vectorDrawables.useSupportLibrary = true
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
@@ -70,11 +70,11 @@ dependencies {
     implementation 'com.sothree.slidinguppanel:library:3.4.0'
     implementation 'com.google.android.exoplayer:exoplayer-core:2.7.3'
     implementation 'com.google.firebase:firebase-core:15.0.2'
-    implementation('com.crashlytics.sdk.android:crashlytics:2.9.2@aar') {
+    implementation('com.crashlytics.sdk.android:crashlytics:2.9.3@aar') {
         transitive = true
     }
 
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.2.41"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.2.41"
 
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'

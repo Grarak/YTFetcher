@@ -9,9 +9,6 @@
     <string name="no_music">No music</string>
     <string name="loading">Loading</string>
     <string name="failed">Failed</string>
-    <string name="music_stopped">Stopped</string>
-    <string name="music_stopped_summary">Music player has been stopped!</string>
-    <string name="previous">Previous</string>
     <string name="next">Next</string>
 
     <!-- Download Service -->
@@ -35,8 +32,6 @@
     <string name="username_exists">Username already exists!</string>
     <string name="username_password_wrong">Username or password is wrong!</string>
     <string name="not_verified">You are not verified yet. Wait for host to unlock your account.</string>
-    <string name="signup_error">Failed to sign up!</string>
-    <string name="login_error">Failed to login!</string>
     <string name="ok">OK</string>
 
     <!-- Home -->

@@ -56,7 +56,7 @@ class MusicPlayerNotification internal constructor(private val service: MusicPla
         val builder = NotificationCompat.Builder(service, NOTIFICATION_CHANNEL)
                 .setContentTitle(service.getString(R.string.loading))
                 .setContentText(result.title)
-                .setSmallIcon(R.drawable.ic_bookmark_music)
+                .setSmallIcon(R.drawable.ic_music_box)
                 .setProgress(0, 0, true)
 
         service.startForeground(NOTIFICATION_ID, builder.build())
@@ -76,7 +76,7 @@ class MusicPlayerNotification internal constructor(private val service: MusicPla
                 .setContentTitle(service.getString(R.string.failed))
                 .setContentText(result.title)
                 .setContentIntent(contentIntent)
-                .setSmallIcon(R.drawable.ic_bookmark_music)
+                .setSmallIcon(R.drawable.ic_music_box)
 
         manager.notify(NOTIFICATION_ID, builder.build())
         service.stopForeground(false)
@@ -129,7 +129,7 @@ class MusicPlayerNotification internal constructor(private val service: MusicPla
                 .setContentTitle(titleFormatted[0])
                 .setContentText(titleFormatted[1])
                 .setSubText(result.duration)
-                .setSmallIcon(R.drawable.ic_bookmark_music)
+                .setSmallIcon(R.drawable.ic_music_box)
                 .setLargeIcon(bitmap)
                 .setContentIntent(contentIntent)
                 .addAction(NotificationCompat.Action(

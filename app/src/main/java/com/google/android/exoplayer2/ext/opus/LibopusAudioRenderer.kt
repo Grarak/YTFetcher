@@ -43,8 +43,7 @@ class LibopusAudioRenderer : SimpleDecoderAudioRenderer {
      * @param audioProcessors Optional [AudioProcessor]s that will process audio before output.
      */
     constructor(eventHandler: Handler?, eventListener: AudioRendererEventListener?,
-                vararg audioProcessors: AudioProcessor) : super(eventHandler, eventListener, *audioProcessors) {
-    }
+                vararg audioProcessors: AudioProcessor) : super(eventHandler, eventListener, *audioProcessors)
 
     /**
      * @param eventHandler A handler to use when delivering events to `eventListener`. May be

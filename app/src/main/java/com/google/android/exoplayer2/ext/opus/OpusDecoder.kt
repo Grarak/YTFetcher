@@ -155,13 +155,13 @@ constructor(numInputBuffers: Int, numOutputBuffers: Int, initialInputBufferSize:
             opusDecode(nativeDecoderContext, inputBuffer.timeUs, inputData, inputData.limit(),
                     outputBuffer)
         if (result < 0) {
-            if (result == DRM_ERROR) {
+            return if (result == DRM_ERROR) {
                 val message = "Drm error: " + opusGetErrorMessage(nativeDecoderContext)
                 val cause = DecryptionException(
                         opusGetErrorCode(nativeDecoderContext), message)
-                return OpusDecoderException(message, cause)
+                OpusDecoderException(message, cause)
             } else {
-                return OpusDecoderException("Decode error: " + opusGetErrorMessage(result.toLong()))
+                OpusDecoderException("Decode error: " + opusGetErrorMessage(result.toLong()))
             }
         }
 

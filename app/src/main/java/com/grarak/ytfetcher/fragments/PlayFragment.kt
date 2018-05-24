@@ -1,5 +1,7 @@
 package com.grarak.ytfetcher.fragments
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.os.Bundle
@@ -9,8 +11,8 @@ import android.support.v4.graphics.drawable.DrawableCompat
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-
 import com.grarak.ytfetcher.R
+
 
 class PlayFragment : TitleFragment() {
 
@@ -21,7 +23,7 @@ class PlayFragment : TitleFragment() {
             setDownloadButton()
         }
     private var downloadButton: FloatingActionButton? = null
-    private var downloadDrawable: Drawable? = null
+    private var downloadDrawable: Bitmap? = null
     private var saveDrawable: Drawable? = null
 
     override val layoutXml: Int = R.layout.fragment_play
@@ -68,10 +70,13 @@ class PlayFragment : TitleFragment() {
             }
 
             if (downloadDrawable == null) {
-                downloadDrawable = ContextCompat.getDrawable(activity!!, R.drawable.ic_download)
-                DrawableCompat.setTint(downloadDrawable!!, Color.WHITE)
+                downloadDrawable = BitmapFactory.decodeResource(resources, R.drawable.ic_download)
             }
-            setImageDrawable(if (readyOnly) saveDrawable else downloadDrawable)
+            if (readyOnly) {
+                setImageDrawable(saveDrawable)
+            } else {
+                setImageBitmap(downloadDrawable)
+            }
         }
     }
 }
