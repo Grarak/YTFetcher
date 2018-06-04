@@ -73,7 +73,7 @@ class SearchFragment : RecyclerViewFragment<AddFragment>(), AddFragment.OnOpenLi
         youtube.apikey = user!!.apikey
         youtube.searchquery = text.toString()
         title = youtube.searchquery
-        titleFragment!!.text = title
+        titleFragment!!.title = title
 
         server!!.close()
         Settings.setLastSearch(activity!!, title!!)

@@ -60,7 +60,7 @@ open class BaseFragment : Fragment() {
             (activity as MainActivity).availablePlaylists = value
         }
 
-    private val downloadedReceiver = object : BroadcastReceiver() {
+    private val downloadedReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             val result = intent.getSerializableExtra(DownloadService.INTENT_DOWNLOAD) as YoutubeSearchResult
             onDownloaded(result)

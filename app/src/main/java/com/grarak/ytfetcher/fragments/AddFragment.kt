@@ -21,12 +21,13 @@ class AddFragment : TitleFragment() {
     private var editTextView: EditText? = null
     private var add: FloatingActionButton? = null
 
-    var text: CharSequence?
+    var text: CharSequence? = null
         set(value) {
-            text?.run {
-                editTextView?.setText(this)
-                editTextView?.setSelection(length)
+            editTextView?.run {
+                setText(value ?: "")
+                setSelection(value?.length ?: 0)
             }
+            field = value
         }
         get() = editTextView?.text
     var hint: CharSequence? = null
