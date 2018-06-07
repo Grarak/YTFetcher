@@ -154,8 +154,8 @@ abstract class RecyclerViewFragment<TF : BaseFragment> : BaseFragment() {
 
         init(savedInstanceState)
 
-        if (savedInstanceState != null) {
-            if (savedInstanceState.getBoolean("progress_visible")) {
+        savedInstanceState?.run {
+            if (getBoolean("progress_visible")) {
                 showProgress()
                 synchronized(this) {
                     progressCount--
@@ -163,11 +163,14 @@ abstract class RecyclerViewFragment<TF : BaseFragment> : BaseFragment() {
             } else {
                 dismissProgress()
             }
-            post()
-        } else if (itemsLoader == null) {
+        }
+
+        if (items.size == 0) {
             showProgress()
             itemsLoader = ItemsLoader(this)
             itemsLoader!!.execute()
+        } else {
+            post()
         }
         return rootView
     }
