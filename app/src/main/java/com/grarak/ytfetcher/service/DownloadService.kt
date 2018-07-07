@@ -16,6 +16,7 @@ import android.os.IBinder
 import android.support.v4.app.NotificationCompat
 import android.support.v4.app.NotificationManagerCompat
 import com.grarak.ytfetcher.R
+import com.grarak.ytfetcher.utils.Log
 import com.grarak.ytfetcher.utils.Settings
 import com.grarak.ytfetcher.utils.server.user.User
 import com.grarak.ytfetcher.utils.server.youtube.Youtube

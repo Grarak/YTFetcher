@@ -1,4 +1,4 @@
-package com.grarak.ytfetcher.fragments
+package com.grarak.ytfetcher.fragments.titles
 
 import android.os.Bundle
 import android.support.annotation.LayoutRes
@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import com.grarak.ytfetcher.R
+import com.grarak.ytfetcher.fragments.BaseFragment
 
 open class TitleFragment : BaseFragment() {
 
@@ -25,7 +26,7 @@ open class TitleFragment : BaseFragment() {
                               savedInstanceState: Bundle?): View? {
         val rootView = inflater.inflate(layoutXml, container, false)
         titleView = rootView.findViewById(R.id.title)
-        titleView?.text = title
+        titleView!!.text = title
         return rootView
     }
 }

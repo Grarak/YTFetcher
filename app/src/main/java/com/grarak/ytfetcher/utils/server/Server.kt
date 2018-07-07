@@ -26,7 +26,7 @@ open class Server(private val url: String) : Closeable {
         synchronized(this) {
             requests.add(request)
         }
-        executor.execute({
+        executor.execute {
             request.doRequest(url, null, null, object : Request.RequestCallback {
                 override fun onConnect(request: Request, status: Int, url: String) {
                     requestCallback.onConnect(request, status, url)
@@ -41,7 +41,7 @@ open class Server(private val url: String) : Closeable {
                     handleRequestCallbackFailure(requestCallback, request, e)
                 }
             })
-        })
+        }
     }
 
     protected fun post(url: String, data: String, requestCallback: Request.RequestCallback) {
@@ -49,7 +49,7 @@ open class Server(private val url: String) : Closeable {
         synchronized(this) {
             requests.add(request)
         }
-        executor.execute({
+        executor.execute {
             request.doRequest(url, "application/json", data, object : Request.RequestCallback {
                 override fun onConnect(request: Request, status: Int, url: String) {
                     requestCallback.onConnect(request, status, url)
@@ -65,7 +65,7 @@ open class Server(private val url: String) : Closeable {
                     handleRequestCallbackFailure(requestCallback, request, e)
                 }
             })
-        })
+        }
     }
 
     private fun handleRequestCallbackSuccess(requestCallback: Request.RequestCallback,

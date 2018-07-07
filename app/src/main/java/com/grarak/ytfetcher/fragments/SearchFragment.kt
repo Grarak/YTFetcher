@@ -3,6 +3,7 @@ package com.grarak.ytfetcher.fragments
 import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
 import com.grarak.ytfetcher.R
+import com.grarak.ytfetcher.fragments.titles.AddFragment
 import com.grarak.ytfetcher.utils.Settings
 import com.grarak.ytfetcher.utils.server.youtube.Youtube
 import com.grarak.ytfetcher.utils.server.youtube.YoutubeSearchResult
@@ -70,7 +71,7 @@ class SearchFragment : RecyclerViewFragment<AddFragment>(), AddFragment.OnOpenLi
         }
 
         val youtube = Youtube()
-        youtube.apikey = user!!.apikey
+        youtube.apikey = user.apikey
         youtube.searchquery = text.toString()
         title = youtube.searchquery
         titleFragment!!.title = title

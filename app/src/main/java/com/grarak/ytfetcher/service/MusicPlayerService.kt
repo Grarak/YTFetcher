@@ -15,6 +15,7 @@ import com.google.android.exoplayer2.ExoPlaybackException
 import com.google.android.exoplayer2.audio.AudioAttributes
 import com.grarak.ytfetcher.utils.EqualizerManager
 import com.grarak.ytfetcher.utils.ExoPlayerWrapper
+import com.grarak.ytfetcher.utils.Log
 import com.grarak.ytfetcher.utils.server.GenericCallback
 import com.grarak.ytfetcher.utils.server.Status
 import com.grarak.ytfetcher.utils.server.history.History
@@ -36,12 +37,13 @@ class MusicPlayerService : Service(), AudioManager.OnAudioFocusChangeListener, E
 
     private val binder = MusicPlayerBinder()
 
-    private var youtubeServer: YoutubeServer? = null
-    private var historyServer: HistoryServer? = null
-    private var exoPlayer: ExoPlayerWrapper? = null
-    var equalizerManager: EqualizerManager? = null
+    private lateinit var youtubeServer: YoutubeServer
+    private lateinit var historyServer: HistoryServer
+    private lateinit var exoPlayer: ExoPlayerWrapper
+    lateinit var equalizerManager: EqualizerManager
         private set
-    private var notification: MusicPlayerNotification? = null
+    private lateinit var notification: MusicPlayerNotification
+    private lateinit var audioManager: AudioManager
     var listener: MusicPlayerListener? = null
 
     private var audioFocusRequest: AudioFocusRequest? = null
@@ -88,19 +90,21 @@ class MusicPlayerService : Service(), AudioManager.OnAudioFocusChangeListener, E
             } else if (intent.action == AudioManager.ACTION_AUDIO_BECOMING_NOISY) {
                 pauseMusic()
             }
+
+            Log.i(intent.action)
         }
     }
 
     val isPlaying: Boolean
         get() = synchronized(trackLock) {
-            return exoPlayer!!.isPlaying && trackPosition >= 0
+            return exoPlayer.isPlaying && trackPosition >= 0
         }
 
     val currentPosition: Long
-        get() = exoPlayer!!.currentPosition
+        get() = exoPlayer.currentPosition
 
     val duration: Long
-        get() = exoPlayer!!.duration
+        get() = exoPlayer.duration
 
     val isPreparing: Boolean
         get() = synchronized(trackLock) {
@@ -108,17 +112,54 @@ class MusicPlayerService : Service(), AudioManager.OnAudioFocusChangeListener, E
         }
 
     val audioSessionId: Int
-        get() = exoPlayer!!.audioSessionId
+        get() = exoPlayer.audioSessionId
 
     inner class MusicPlayerBinder : Binder() {
         val service: MusicPlayerService
             get() = this@MusicPlayerService
     }
 
+    override fun onCreate() {
+        super.onCreate()
+
+        youtubeServer = YoutubeServer(this)
+        historyServer = HistoryServer(this)
+
+        exoPlayer = ExoPlayerWrapper(this)
+        exoPlayer.onPlayerListener = this
+        val audioAttributes = AudioAttributes.Builder()
+                .setContentType(C.CONTENT_TYPE_MUSIC)
+                .setUsage(C.USAGE_MEDIA).build()
+        exoPlayer.setAudioAttributes(audioAttributes)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            audioFocusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+                    .setAcceptsDelayedFocusGain(true)
+                    .setWillPauseWhenDucked(true)
+                    .setOnAudioFocusChangeListener(this)
+                    .build()
+        }
+
+        equalizerManager = EqualizerManager(this)
+
+        notification = MusicPlayerNotification(this)
+
+        audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+
+        val filter = IntentFilter()
+        filter.addAction(ACTION_MUSIC_PLAYER_STOP)
+        filter.addAction(ACTION_MUSIC_PLAY_PAUSE)
+        filter.addAction(ACTION_MUSIC_PREVIOUS)
+        filter.addAction(ACTION_MUSIC_NEXT)
+        filter.addAction(AudioManager.ACTION_AUDIO_BECOMING_NOISY)
+        filter.addAction(Intent.ACTION_MEDIA_BUTTON)
+        registerReceiver(receiver, filter)
+    }
+
     @Synchronized
     fun playMusic(user: User?, results: List<YoutubeSearchResult>, position: Int) {
         pauseMusic()
-        youtubeServer!!.close()
+        youtubeServer.close()
 
         synchronized(trackLock) {
             this.user = user
@@ -131,25 +172,23 @@ class MusicPlayerService : Service(), AudioManager.OnAudioFocusChangeListener, E
             }
         }
 
-        if (listener != null) {
-            listener!!.onPreparing(tracks, position)
-        }
+        listener?.onPreparing(tracks, position)
 
         val result = tracks[position]
-        notification!!.showProgress(result)
+        notification.showProgress(result)
 
         val file = result.getDownloadPath(this)
         if (file.exists()) {
             val history = History()
             history.apikey = user!!.apikey
             history.id = result.id
-            historyServer!!.add(history, object : GenericCallback {
+            historyServer.add(history, object : GenericCallback {
                 override fun onSuccess() {}
 
                 override fun onFailure(code: Int) {}
             })
 
-            exoPlayer!!.setFile(file)
+            exoPlayer.setFile(file)
             return
         }
 
@@ -157,9 +196,9 @@ class MusicPlayerService : Service(), AudioManager.OnAudioFocusChangeListener, E
         youtube.apikey = user!!.apikey
         youtube.id = result.id
         youtube.addhistory = true
-        youtubeServer!!.fetchSong(youtube, object : YoutubeServer.YoutubeSongIdCallback {
+        youtubeServer.fetchSong(youtube, object : YoutubeServer.YoutubeSongIdCallback {
             override fun onSuccess(url: String) {
-                exoPlayer!!.setUrl(url)
+                exoPlayer.setUrl(url)
             }
 
             override fun onFailure(code: Int) {
@@ -173,7 +212,7 @@ class MusicPlayerService : Service(), AudioManager.OnAudioFocusChangeListener, E
                         trackPosition = -1
                     }
                 }
-                notification!!.showFailure(result)
+                notification.showFailure(result)
             }
         })
     }
@@ -188,31 +227,31 @@ class MusicPlayerService : Service(), AudioManager.OnAudioFocusChangeListener, E
                 return
             }
             seekTo(lastMusicPosition)
-            exoPlayer!!.play()
-            notification!!.showPlay(tracks[trackPosition])
-            if (listener != null) {
-                listener!!.onPlay(tracks, trackPosition)
-            }
+            exoPlayer.play()
+            notification.showPlay(tracks[trackPosition])
+            listener?.onPlay(tracks, trackPosition)
         }
     }
 
     fun pauseMusic() {
         synchronized(trackLock) {
             lastMusicPosition = currentPosition
-            exoPlayer!!.pause()
-            notification!!.showPause()
+            exoPlayer.pause()
+            notification.showPause()
             synchronized(focusLock) {
                 resumeOnFocusGain = false
             }
-            if (listener != null && trackPosition >= 0) {
-                listener!!.onPause(tracks, trackPosition)
+            listener?.run {
+                if (trackPosition >= 0) {
+                    onPause(tracks, trackPosition)
+                }
             }
         }
     }
 
     fun seekTo(position: Long) {
         lastMusicPosition = position
-        exoPlayer!!.seekTo(position)
+        exoPlayer.seekTo(position)
     }
 
     fun getTracks(): List<YoutubeSearchResult> {
@@ -222,10 +261,7 @@ class MusicPlayerService : Service(), AudioManager.OnAudioFocusChangeListener, E
     }
 
     private fun requestAudioFocus() {
-        val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-
-        val ret: Int
-        ret = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        val ret: Int = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             audioManager.requestAudioFocus(audioFocusRequest!!)
         } else {
             audioManager.requestAudioFocus(this,
@@ -264,7 +300,7 @@ class MusicPlayerService : Service(), AudioManager.OnAudioFocusChangeListener, E
                 if (listener != null) {
                     listener!!.onFailure(Status.ServerOffline, tracks, trackPosition)
                 }
-                notification!!.showFailure(tracks[trackPosition])
+                notification.showFailure(tracks[trackPosition])
                 if (moveOn()) {
                     playMusic(user, tracks, trackPosition + 1)
                 } else {
@@ -282,10 +318,8 @@ class MusicPlayerService : Service(), AudioManager.OnAudioFocusChangeListener, E
     }
 
     override fun onAudioSessionIdChanged(exoPlayer: ExoPlayerWrapper, id: Int) {
-        equalizerManager!!.setAudioSessionId(id)
-        if (listener != null) {
-            listener!!.onAudioSessionIdChanged(id)
-        }
+        equalizerManager.setAudioSessionId(id)
+        listener?.onAudioSessionIdChanged(id)
     }
 
     override fun onAudioFocusChange(focusChange: Int) {
@@ -296,7 +330,7 @@ class MusicPlayerService : Service(), AudioManager.OnAudioFocusChangeListener, E
                         playbackDelayed = false
                         resumeOnFocusGain = false
                     }
-                    exoPlayer!!.setVolume(1.0f)
+                    exoPlayer.setVolume(1.0f)
                     playMusic()
                 }
                 AudioManager.AUDIOFOCUS_LOSS -> {
@@ -319,49 +353,15 @@ class MusicPlayerService : Service(), AudioManager.OnAudioFocusChangeListener, E
 
     }
 
-    override fun onCreate() {
-        super.onCreate()
-
-        youtubeServer = YoutubeServer(this)
-        historyServer = HistoryServer(this)
-
-        exoPlayer = ExoPlayerWrapper(this)
-        exoPlayer!!.onPlayerListener = this
-        val audioAttributes = AudioAttributes.Builder()
-                .setContentType(C.CONTENT_TYPE_MUSIC)
-                .setUsage(C.USAGE_MEDIA).build()
-        exoPlayer!!.setAudioAttributes(audioAttributes)
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            audioFocusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
-                    .setAcceptsDelayedFocusGain(true)
-                    .setWillPauseWhenDucked(true)
-                    .setOnAudioFocusChangeListener(this)
-                    .build()
-        }
-
-        equalizerManager = EqualizerManager(this)
-
-        notification = MusicPlayerNotification(this)
-
-        val filter = IntentFilter()
-        filter.addAction(ACTION_MUSIC_PLAYER_STOP)
-        filter.addAction(ACTION_MUSIC_PLAY_PAUSE)
-        filter.addAction(ACTION_MUSIC_PREVIOUS)
-        filter.addAction(ACTION_MUSIC_NEXT)
-        filter.addAction(AudioManager.ACTION_AUDIO_BECOMING_NOISY)
-        registerReceiver(receiver, filter)
-    }
-
     override fun onDestroy() {
         super.onDestroy()
 
-        notification!!.stop()
+        notification.stop()
 
-        equalizerManager!!.release()
-        exoPlayer!!.release()
-        youtubeServer!!.close()
-        historyServer!!.close()
+        equalizerManager.release()
+        exoPlayer.release()
+        youtubeServer.close()
+        historyServer.close()
         unregisterReceiver(receiver)
 
         val am = getSystemService(Context.AUDIO_SERVICE) as AudioManager

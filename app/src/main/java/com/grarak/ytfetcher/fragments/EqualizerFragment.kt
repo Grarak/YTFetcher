@@ -3,6 +3,7 @@ package com.grarak.ytfetcher.fragments
 import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
 import com.grarak.ytfetcher.R
+import com.grarak.ytfetcher.fragments.titles.TitleFragment
 import com.grarak.ytfetcher.views.recyclerview.RecyclerViewItem
 import com.grarak.ytfetcher.views.recyclerview.SeekBarItem
 import com.grarak.ytfetcher.views.recyclerview.SelectorItem

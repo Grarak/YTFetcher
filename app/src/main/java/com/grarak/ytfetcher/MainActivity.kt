@@ -32,14 +32,14 @@ class MainActivity : BaseActivity(), MusicPlayerListener {
 
     private val items = ArrayList<FragmentItem>()
 
-    private var viewPager: ViewPager? = null
-    var bottomNavigationView: BottomNavigationView? = null
+    private lateinit var viewPager: ViewPager
+    lateinit var bottomNavigationView: BottomNavigationView
         private set
-    private var slidingUpPanelLayout: SlidingUpPanelLayout? = null
+    private lateinit var slidingUpPanelLayout: SlidingUpPanelLayout
     private var currentPage: Int = 0
 
-    private var musicPlayerView: MusicPlayerParentView? = null
-    var musicManager: MusicManager? = null
+    private lateinit var musicPlayerView: MusicPlayerParentView
+    lateinit var musicManager: MusicManager
         private set
 
     var availablePlaylists = ArrayList<String>()
@@ -82,45 +82,45 @@ class MainActivity : BaseActivity(), MusicPlayerListener {
         items.add(FragmentItem(SettingsFragment::class.java, R.drawable.ic_settings, R.string.settings))
 
         val adapter = ViewPagerAdapter(this, items, user)
-        viewPager!!.adapter = adapter
-        viewPager!!.offscreenPageLimit = items.size
+        viewPager.adapter = adapter
+        viewPager.offscreenPageLimit = items.size
         currentPage = Settings.getPage(this)
-        viewPager!!.currentItem = currentPage
+        viewPager.currentItem = currentPage
 
-        val menu = bottomNavigationView!!.menu
+        val menu = bottomNavigationView.menu
         for (i in items.indices) {
             val item = items[i]
             menu.add(0, i, 0, item.title).setIcon(item.icon)
         }
 
         musicManager = MusicManager(this, user, this)
-        musicPlayerView!!.setMusicManager(musicManager!!)
+        musicPlayerView.setMusicManager(musicManager)
 
         if (savedInstanceState != null) {
             if (savedInstanceState.getBoolean("panel_visible")) {
-                slidingUpPanelLayout!!.panelState = SlidingUpPanelLayout.PanelState.EXPANDED
-                musicPlayerView!!.setCollapsed(false)
+                slidingUpPanelLayout.panelState = SlidingUpPanelLayout.PanelState.EXPANDED
+                musicPlayerView.setCollapsed(false)
             }
             availablePlaylists.addAll(savedInstanceState
                     .getStringArrayList("availablePlaylists"))
         }
 
-        slidingUpPanelLayout!!.addPanelSlideListener(object : SlidingUpPanelLayout.SimplePanelSlideListener() {
+        slidingUpPanelLayout.addPanelSlideListener(object : SlidingUpPanelLayout.SimplePanelSlideListener() {
             override fun onPanelStateChanged(panel: View?,
                                              previousState: SlidingUpPanelLayout.PanelState?,
                                              newState: SlidingUpPanelLayout.PanelState?) {
-                musicPlayerView!!.setCollapsed(newState == SlidingUpPanelLayout.PanelState.COLLAPSED)
+                musicPlayerView.setCollapsed(newState == SlidingUpPanelLayout.PanelState.COLLAPSED)
             }
         })
 
-        slidingUpPanelLayout!!.post { slidingUpPanelLayout!!.getChildAt(1).setOnClickListener(null) }
+        slidingUpPanelLayout.post { slidingUpPanelLayout.getChildAt(1).setOnClickListener(null) }
 
         val foregroundFragment = foregroundFragment
         if (foregroundFragment != null) {
             showForegroundFragment(foregroundFragment)
         }
 
-        viewPager!!.post { onPageChanged(currentPage) }
+        viewPager.post { onPageChanged(currentPage) }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), 0)
@@ -131,14 +131,14 @@ class MainActivity : BaseActivity(), MusicPlayerListener {
         val previousFragment = getViewPagerFragment(items[currentPage])
         val fragment = getViewPagerFragment(items[position])
 
-        viewPager!!.removeOnPageChangeListener(simpleOnPageChangeListener)
-        bottomNavigationView!!.setOnNavigationItemSelectedListener(null)
+        viewPager.removeOnPageChangeListener(simpleOnPageChangeListener)
+        bottomNavigationView.setOnNavigationItemSelectedListener(null)
 
-        viewPager!!.currentItem = position
-        bottomNavigationView!!.selectedItemId = position
+        viewPager.currentItem = position
+        bottomNavigationView.selectedItemId = position
 
-        viewPager!!.addOnPageChangeListener(simpleOnPageChangeListener)
-        bottomNavigationView!!.setOnNavigationItemSelectedListener(onNavigationItemSelectedListener)
+        viewPager.addOnPageChangeListener(simpleOnPageChangeListener)
+        bottomNavigationView.setOnNavigationItemSelectedListener(onNavigationItemSelectedListener)
 
         if (previousFragment is BaseFragment) {
             previousFragment.onViewPagerPause()
@@ -182,8 +182,8 @@ class MainActivity : BaseActivity(), MusicPlayerListener {
     }
 
     override fun onBackPressed() {
-        if (slidingUpPanelLayout!!.panelState == SlidingUpPanelLayout.PanelState.EXPANDED) {
-            slidingUpPanelLayout!!.panelState = SlidingUpPanelLayout.PanelState.COLLAPSED
+        if (slidingUpPanelLayout.panelState == SlidingUpPanelLayout.PanelState.EXPANDED) {
+            slidingUpPanelLayout.panelState = SlidingUpPanelLayout.PanelState.COLLAPSED
             return
         }
 
@@ -204,7 +204,7 @@ class MainActivity : BaseActivity(), MusicPlayerListener {
         super.onSaveInstanceState(outState)
 
         outState.putBoolean("panel_visible",
-                slidingUpPanelLayout!!.panelState == SlidingUpPanelLayout.PanelState.EXPANDED)
+                slidingUpPanelLayout.panelState == SlidingUpPanelLayout.PanelState.EXPANDED)
         synchronized(availablePlaylists) {
             outState.putStringArrayList("availablePlaylists", availablePlaylists)
         }
@@ -212,45 +212,45 @@ class MainActivity : BaseActivity(), MusicPlayerListener {
 
     override fun onResume() {
         super.onResume()
-        musicManager!!.onResume()
+        musicManager.onResume()
     }
 
     override fun onPause() {
         super.onPause()
-        musicManager!!.onPause()
+        musicManager.onPause()
     }
 
     override fun onStop() {
         super.onStop()
-        musicPlayerView!!.onNoMusic()
+        musicPlayerView.onNoMusic()
     }
 
     override fun onConnect() {
-        slidingUpPanelLayout!!.isTouchEnabled = true
+        slidingUpPanelLayout.isTouchEnabled = true
         when {
-            musicManager!!.isPlaying -> {
-                musicPlayerView!!.onPlay(
-                        musicManager!!.tracks, musicManager!!.trackPosition)
-                musicPlayerView!!.onAudioSessionIdChanged(musicManager!!.audioSessionId)
+            musicManager.isPlaying -> {
+                musicPlayerView.onPlay(
+                        musicManager.tracks, musicManager.trackPosition)
+                musicPlayerView.onAudioSessionIdChanged(musicManager.audioSessionId)
             }
 
-            musicManager!!.isPreparing -> musicPlayerView!!.onFetch(
-                    musicManager!!.tracks, musicManager!!.trackPosition)
+            musicManager.isPreparing -> musicPlayerView.onFetch(
+                    musicManager.tracks, musicManager.trackPosition)
 
-            musicManager!!.trackPosition >= 0 -> musicPlayerView!!.onPause(
-                    musicManager!!.tracks, musicManager!!.trackPosition)
+            musicManager.trackPosition >= 0 -> musicPlayerView.onPause(
+                    musicManager.tracks, musicManager.trackPosition)
 
             else -> {
-                musicPlayerView!!.onNoMusic()
-                slidingUpPanelLayout!!.panelState = SlidingUpPanelLayout.PanelState.COLLAPSED
-                slidingUpPanelLayout!!.isTouchEnabled = false
+                musicPlayerView.onNoMusic()
+                slidingUpPanelLayout.panelState = SlidingUpPanelLayout.PanelState.COLLAPSED
+                slidingUpPanelLayout.isTouchEnabled = false
             }
         }
     }
 
     override fun onPreparing(results: List<YoutubeSearchResult>, position: Int) {
-        musicPlayerView!!.onFetch(results, position)
-        slidingUpPanelLayout!!.isTouchEnabled = true
+        musicPlayerView.onFetch(results, position)
+        slidingUpPanelLayout.isTouchEnabled = true
     }
 
     override fun onFailure(code: Int, results: List<YoutubeSearchResult>, position: Int) {
@@ -260,30 +260,30 @@ class MainActivity : BaseActivity(), MusicPlayerListener {
             Utils.toast(R.string.server_offline, this)
         }
 
-        musicPlayerView!!.onFailure(code, results, position)
-        slidingUpPanelLayout!!.isTouchEnabled = true
+        musicPlayerView.onFailure(code, results, position)
+        slidingUpPanelLayout.isTouchEnabled = true
     }
 
     override fun onPlay(results: List<YoutubeSearchResult>, position: Int) {
-        musicPlayerView!!.onPlay(results, position)
-        slidingUpPanelLayout!!.isTouchEnabled = true
+        musicPlayerView.onPlay(results, position)
+        slidingUpPanelLayout.isTouchEnabled = true
     }
 
     override fun onPause(results: List<YoutubeSearchResult>, position: Int) {
-        musicPlayerView!!.onPause(results, position)
-        slidingUpPanelLayout!!.isTouchEnabled = true
+        musicPlayerView.onPause(results, position)
+        slidingUpPanelLayout.isTouchEnabled = true
     }
 
     override fun onAudioSessionIdChanged(id: Int) {
-        musicPlayerView!!.onAudioSessionIdChanged(id)
+        musicPlayerView.onAudioSessionIdChanged(id)
     }
 
     override fun onDisconnect() {
-        musicPlayerView!!.onNoMusic()
-        slidingUpPanelLayout!!.isTouchEnabled = false
-        slidingUpPanelLayout!!.panelState = SlidingUpPanelLayout.PanelState.COLLAPSED
+        musicPlayerView.onNoMusic()
+        slidingUpPanelLayout.isTouchEnabled = false
+        slidingUpPanelLayout.panelState = SlidingUpPanelLayout.PanelState.COLLAPSED
 
-        musicManager!!.restart()
+        musicManager.restart()
     }
 
     class ViewPagerAdapter constructor(activity: AppCompatActivity,

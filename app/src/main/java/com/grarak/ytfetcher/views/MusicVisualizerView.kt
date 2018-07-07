@@ -75,9 +75,7 @@ class MusicVisualizerView @JvmOverloads constructor(context: Context, attrs: Att
         }
 
         try {
-            if (visualizer != null) {
-                visualizer!!.release()
-            }
+            visualizer?.release()
 
             visualizer = Visualizer(id)
             visualizer!!.enabled = false
@@ -85,8 +83,7 @@ class MusicVisualizerView @JvmOverloads constructor(context: Context, attrs: Att
             visualizer!!.setDataCaptureListener(this,
                     Visualizer.getMaxCaptureRate() / 2, true, false)
             visualizer!!.enabled = true
-        } catch (e: Exception) {
-            e.printStackTrace()
+        } catch (ignored: Exception) {
         }
     }
 

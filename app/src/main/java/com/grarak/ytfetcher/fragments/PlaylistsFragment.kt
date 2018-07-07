@@ -3,6 +3,7 @@ package com.grarak.ytfetcher.fragments
 import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
 import com.grarak.ytfetcher.R
+import com.grarak.ytfetcher.fragments.titles.AddFragment
 import com.grarak.ytfetcher.utils.Utils
 import com.grarak.ytfetcher.utils.server.GenericCallback
 import com.grarak.ytfetcher.utils.server.Status
@@ -24,8 +25,7 @@ class PlaylistsFragment : RecyclerViewFragment<AddFragment>(), AddFragment.OnCon
 
     override val titleFragmentClass: Class<AddFragment> = AddFragment::class.java
 
-    override val emptyViewsMessage: String
-        get() = getString(R.string.no_playlists)
+    override val emptyViewsMessage by lazy { getString(R.string.no_playlists) }
 
     override fun createLayoutManager(): LinearLayoutManager {
         return LinearLayoutManager(activity)
@@ -40,13 +40,13 @@ class PlaylistsFragment : RecyclerViewFragment<AddFragment>(), AddFragment.OnCon
 
     private fun fetchPlaylists() {
         showProgress()
-        server!!.list(user!!.apikey!!, object : PlaylistServer.PlaylistListCallback {
+        server!!.list(user.apikey!!, object : PlaylistServer.PlaylistListCallback {
             override fun onSuccess(playlists: Playlists) {
                 addViews(playlists)
             }
 
             override fun onFailure(code: Int) {
-                addViews(Playlists.restore(activity!!))
+                addViews(Playlists.restore(requireActivity()))
             }
 
             private fun addViews(playlists: Playlists?) {
@@ -58,7 +58,7 @@ class PlaylistsFragment : RecyclerViewFragment<AddFragment>(), AddFragment.OnCon
                 for (playlist in playlists) {
                     addItem(playlist)
                 }
-                playlists.save(activity!!)
+                playlists.save(requireActivity())
             }
         })
     }
@@ -74,7 +74,7 @@ class PlaylistsFragment : RecyclerViewFragment<AddFragment>(), AddFragment.OnCon
             }
 
             override fun onPublic(item: PlaylistItem, isPublic: Boolean) {
-                playlist.apikey = user!!.apikey
+                playlist.apikey = user.apikey
                 playlist.isPublic = isPublic
 
                 server!!.setPublic(playlist, object : GenericCallback {
@@ -88,7 +88,7 @@ class PlaylistsFragment : RecyclerViewFragment<AddFragment>(), AddFragment.OnCon
             }
 
             override fun onDelete(item: PlaylistItem) {
-                playlist.apikey = user!!.apikey
+                playlist.apikey = user.apikey
                 server!!.delete(playlist, object : GenericCallback {
                     override fun onSuccess() {
                         if (!isAdded) return
@@ -100,7 +100,7 @@ class PlaylistsFragment : RecyclerViewFragment<AddFragment>(), AddFragment.OnCon
                     }
 
                     override fun onFailure(code: Int) {
-                        Utils.toast(R.string.server_offline, activity!!)
+                        Utils.toast(R.string.server_offline, requireActivity())
                     }
                 })
             }
@@ -122,7 +122,7 @@ class PlaylistsFragment : RecyclerViewFragment<AddFragment>(), AddFragment.OnCon
 
         val playlist = Playlist()
         playlist.name = text.toString()
-        playlist.apikey = user!!.apikey
+        playlist.apikey = user.apikey
 
         showProgress()
         server!!.create(playlist, object : GenericCallback {
@@ -136,9 +136,9 @@ class PlaylistsFragment : RecyclerViewFragment<AddFragment>(), AddFragment.OnCon
                 if (!isAdded) return
                 dismissProgress()
                 if (code == Status.PlaylistIdAlreadyExists) {
-                    Utils.toast(R.string.playlist_already_exists, activity!!)
+                    Utils.toast(R.string.playlist_already_exists, requireActivity())
                 } else {
-                    Utils.toast(R.string.server_offline, activity!!)
+                    Utils.toast(R.string.server_offline, requireActivity())
                 }
             }
         })
@@ -147,17 +147,17 @@ class PlaylistsFragment : RecyclerViewFragment<AddFragment>(), AddFragment.OnCon
     private fun showPlaylist(playlist: Playlist) {
         showProgress()
 
-        playlist.apikey = user!!.apikey
+        playlist.apikey = user.apikey
         server!!.listPlaylistIds(playlist, object : PlaylistServer.PlayListIdsCallback {
             override fun onSuccess(ids: List<String>) {
-                if (ids.size == 0) {
+                if (ids.isEmpty()) {
                     dismissProgress()
-                    Utils.toast(R.string.no_songs, activity!!)
+                    Utils.toast(R.string.no_songs, requireActivity())
                     return
                 }
 
-                val server = YoutubeServer(activity!!)
-                val results = HashMap<String, YoutubeSearchResult>()
+                val server = YoutubeServer(requireActivity())
+                val results = HashMap<String, YoutubeSearchResult?>()
                 for (id in ids) {
                     val youtube = Youtube()
                     youtube.apikey = playlist.apikey
@@ -165,28 +165,30 @@ class PlaylistsFragment : RecyclerViewFragment<AddFragment>(), AddFragment.OnCon
 
                     server.getInfo(youtube, object : YoutubeServer.YoutubeResultCallback {
                         override fun onSuccess(result: YoutubeSearchResult) {
-                            synchronized(results) {
-                                results[id] = result
-
-                                if (results.size == ids.size) {
-                                    if (!isAdded) return
-                                    val playlistResults = PlaylistResults()
-                                    playlistResults.name = playlist.name
-                                    playlistResults.songs = ArrayList()
-                                    for (id in ids) {
-                                        playlistResults.songs!!.add(results[id]!!)
-                                    }
-
-                                    playlistResults.save(activity!!)
-                                    showPlaylist(playlistResults)
-                                    dismissProgress()
-                                }
-                            }
+                            checkCompletion(result)
                         }
 
                         override fun onFailure(code: Int) {
-                            failure()
-                            server.close()
+                            checkCompletion(null)
+                        }
+
+                        private fun checkCompletion(result: YoutubeSearchResult?) {
+                            results[id] = result
+                            if (results.size == ids.size) {
+                                if (!isAdded) return
+                                val playlistResults = PlaylistResults()
+                                playlistResults.name = playlist.name
+                                playlistResults.songs = ArrayList()
+                                for (id in ids) {
+                                    results[id]?.run {
+                                        playlistResults.songs!!.add(this)
+                                    }
+                                }
+
+                                playlistResults.save(activity!!)
+                                showPlaylist(playlistResults)
+                                dismissProgress()
+                            }
                         }
                     })
                 }
@@ -199,18 +201,17 @@ class PlaylistsFragment : RecyclerViewFragment<AddFragment>(), AddFragment.OnCon
             private fun failure() {
                 if (!isAdded) return
 
-                val playlistResults = PlaylistResults.restore(playlist.name!!, activity!!)
-                if (playlistResults != null) {
-                    showPlaylist(playlistResults)
-                } else {
-                    Utils.toast(R.string.server_offline, activity!!)
+                val playlistResults = PlaylistResults.restore(playlist.name!!, requireActivity())
+                playlistResults?.run {
+                    showPlaylist(this)
+                    Utils.toast(R.string.server_offline, requireActivity())
                 }
                 dismissProgress()
             }
 
-            private fun showPlaylist(playlistResults: PlaylistResults?) {
+            private fun showPlaylist(playlistResults: PlaylistResults) {
                 showForegroundFragment(
-                        PlaylistIdsFragment.newInstance(user!!, playlistResults!!, false))
+                        PlaylistIdsFragment.newInstance(user, playlistResults, false))
             }
         })
     }
@@ -230,8 +231,6 @@ class PlaylistsFragment : RecyclerViewFragment<AddFragment>(), AddFragment.OnCon
     override fun onDestroy() {
         super.onDestroy()
 
-        if (server != null) {
-            server!!.close()
-        }
+        server?.close()
     }
 }

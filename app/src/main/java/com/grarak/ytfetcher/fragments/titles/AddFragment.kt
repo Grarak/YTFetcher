@@ -1,4 +1,4 @@
-package com.grarak.ytfetcher.fragments
+package com.grarak.ytfetcher.fragments.titles
 
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
@@ -17,7 +17,7 @@ import io.codetail.animation.ViewAnimationUtils
 
 class AddFragment : TitleFragment() {
 
-    private var editTextParent: View? = null
+    private lateinit var editTextParent: View
     private var editTextView: EditText? = null
     private var add: FloatingActionButton? = null
 
@@ -63,19 +63,19 @@ class AddFragment : TitleFragment() {
         editTextParent = rootView!!.findViewById(R.id.edittext_parent)
         editTextView = rootView.findViewById(R.id.edittext)
         editTextView!!.hint = hint
-        editTextView!!.setOnEditorActionListener({ _, actionId, _ ->
+        editTextView!!.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE || actionId == EditorInfo.IME_ACTION_UNSPECIFIED) {
                 onDone()
                 return@setOnEditorActionListener true
             }
             false
-        })
+        }
 
         rootView.findViewById<View>(R.id.delete_btn).setOnClickListener { editTextView!!.setText("") }
 
         add = rootView.findViewById(R.id.add)
         add!!.setOnClickListener {
-            if (editTextParent!!.visibility == View.INVISIBLE) {
+            if (editTextParent.visibility == View.INVISIBLE) {
                 showEditText(true)
             } else {
                 onDone()
@@ -87,7 +87,7 @@ class AddFragment : TitleFragment() {
 
         if (savedInstanceState != null) {
             if (savedInstanceState.getBoolean("show")) {
-                editTextParent!!.visibility = View.VISIBLE
+                editTextParent.visibility = View.VISIBLE
                 Utils.showKeyboard(editTextView!!)
             }
             editTextView!!.setText(savedInstanceState.getCharSequence("text"))
@@ -104,12 +104,12 @@ class AddFragment : TitleFragment() {
     }
 
     private fun showEditText(show: Boolean) {
-        val animator = ViewAnimationUtils.createCircularReveal(editTextParent!!,
-                editTextParent!!.width, 0, 0f, editTextParent!!.width.toFloat())
+        val animator = ViewAnimationUtils.createCircularReveal(editTextParent,
+                editTextParent.width, 0, 0f, editTextParent.width.toFloat())
         if (!show) {
             animator.interpolator = Interpolator { Math.abs(it - 1f) }
         }
-        editTextParent!!.visibility = View.VISIBLE
+        editTextParent.visibility = View.VISIBLE
         editTextView!!.setText("")
         if (show) {
             onOpenListener?.onOpen(this)
@@ -121,7 +121,7 @@ class AddFragment : TitleFragment() {
             override fun onAnimationEnd(animation: Animator) {
                 super.onAnimationEnd(animation)
                 if (!show) {
-                    editTextParent!!.visibility = View.INVISIBLE
+                    editTextParent.visibility = View.INVISIBLE
                 }
             }
         })
@@ -132,14 +132,14 @@ class AddFragment : TitleFragment() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
 
-        outState.putBoolean("show", editTextParent!!.visibility == View.VISIBLE)
+        outState.putBoolean("show", editTextParent.visibility == View.VISIBLE)
         outState.putCharSequence("text", editTextView!!.text)
     }
 
     override fun onViewPagerResume() {
         super.onViewPagerResume()
 
-        if (editTextParent!!.visibility == View.VISIBLE) {
+        if (editTextParent.visibility == View.VISIBLE) {
             Utils.showKeyboard(editTextView!!)
         }
     }
@@ -151,7 +151,7 @@ class AddFragment : TitleFragment() {
     }
 
     override fun onBackPressed(): Boolean {
-        if (editTextParent!!.visibility == View.VISIBLE) {
+        if (editTextParent.visibility == View.VISIBLE) {
             showEditText(false)
             return true
         }

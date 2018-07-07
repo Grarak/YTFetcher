@@ -31,13 +31,7 @@ import java.util.concurrent.LinkedBlockingQueue
 
 open class BaseFragment : Fragment() {
 
-    var user: User? = null
-        get() {
-            if (field == null) {
-                field = arguments!!.getSerializable(MainActivity.USER_INTENT) as User
-            }
-            return field
-        }
+    val user: User by lazy { arguments!!.getSerializable(MainActivity.USER_INTENT) as User }
 
     private var playlistServer: PlaylistServer? = null
     private var resultToAddPlaylist: YoutubeSearchResult? = null
@@ -132,7 +126,7 @@ open class BaseFragment : Fragment() {
         val playlists = availablePlaylists.toTypedArray()
         AlertDialog.Builder(activity!!).setItems(playlists) { _, which ->
             val playlistId = PlaylistId()
-            playlistId.apikey = user!!.apikey
+            playlistId.apikey = user.apikey
             playlistId.name = playlists[which]
             playlistId.id = result.id
             playlistServer!!.addToPlaylist(playlistId, object : GenericCallback {
@@ -181,24 +175,24 @@ open class BaseFragment : Fragment() {
         onPermissionGranted(request)
     }
 
-    fun onPermissionGranted(request: Int) {
+    private fun onPermissionGranted(request: Int) {
         if (request == 0) {
             while (resultsToQueue.size != 0) {
-                DownloadService.queueDownload(activity!!, user!!, resultsToQueue.poll())
+                DownloadService.queueDownload(requireActivity(), user, resultsToQueue.poll())
             }
         }
     }
 
-    fun onPermissionDenied(request: Int) {
-        Utils.toast(R.string.no_permissions, activity!!)
+    private fun onPermissionDenied(request: Int) {
+        Utils.toast(R.string.no_permissions, requireActivity())
     }
 
     fun queueDownload(result: YoutubeSearchResult) {
         if (Integer.parseInt(result.duration!!.substring(0, result.duration!!.indexOf(':'))) > 20) {
-            Utils.toast(getString(R.string.too_long, result.title), activity!!)
+            Utils.toast(getString(R.string.too_long, result.title), requireActivity())
             return
         }
-        if (result.getDownloadPath(activity!!).exists()) {
+        if (result.getDownloadPath(requireActivity()).exists()) {
             return
         }
         resultsToQueue.offer(result)
@@ -211,11 +205,11 @@ open class BaseFragment : Fragment() {
         val currentTrack = musicManager!!.trackPosition
         if (currentTrack >= 0) {
             if (musicManager!!.tracks[currentTrack] == result) {
-                Utils.toast(R.string.delete_not_possible, activity!!)
+                Utils.toast(R.string.delete_not_possible, requireActivity())
                 return false
             }
         }
-        return result.delete(activity!!)
+        return result.delete(requireActivity())
     }
 
     open fun onRemoveForeground() {}

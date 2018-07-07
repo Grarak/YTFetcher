@@ -9,6 +9,7 @@ import android.view.View
 
 import com.grarak.ytfetcher.LoginActivity
 import com.grarak.ytfetcher.R
+import com.grarak.ytfetcher.fragments.titles.TitleFragment
 import com.grarak.ytfetcher.utils.Prefs
 import com.grarak.ytfetcher.utils.Settings
 import com.grarak.ytfetcher.views.recyclerview.RecyclerViewItem

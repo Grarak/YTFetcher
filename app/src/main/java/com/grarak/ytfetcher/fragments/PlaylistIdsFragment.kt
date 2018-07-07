@@ -12,6 +12,7 @@ import android.widget.EditText
 import android.widget.FrameLayout
 import com.grarak.ytfetcher.MainActivity
 import com.grarak.ytfetcher.R
+import com.grarak.ytfetcher.fragments.titles.PlayFragment
 import com.grarak.ytfetcher.utils.Utils
 import com.grarak.ytfetcher.utils.server.GenericCallback
 import com.grarak.ytfetcher.utils.server.Status
@@ -76,6 +77,13 @@ class PlaylistIdsFragment : RecyclerViewFragment<PlayFragment>() {
         server = PlaylistServer(activity!!)
     }
 
+    override fun onViewFinished() {
+        super.onViewFinished()
+
+        recyclerView.setPadding(recyclerView.paddingLeft, 0,
+                recyclerView.paddingRight, recyclerView.paddingBottom)
+    }
+
     override fun createAdapter(): RecyclerViewAdapter {
         return PlaylistIdItem.Adapter(items)
     }
@@ -105,7 +113,7 @@ class PlaylistIdsFragment : RecyclerViewFragment<PlayFragment>() {
 
                 override fun onRemoveFromPlaylist(item: PlaylistIdItem) {
                     val playlistId = PlaylistId()
-                    playlistId.apikey = user!!.apikey
+                    playlistId.apikey = user.apikey
                     playlistId.name = playlistResults!!.name
                     playlistId.id = result.id
                     server!!.deleteFromPlaylist(playlistId, object : GenericCallback {
@@ -234,7 +242,7 @@ class PlaylistIdsFragment : RecyclerViewFragment<PlayFragment>() {
                 .setView(layout)
                 .setPositiveButton(R.string.ok) { _, _ ->
                     val playlist = Playlist()
-                    playlist.apikey = user!!.apikey
+                    playlist.apikey = user.apikey
                     playlist.name = editText.text.toString()
                     server!!.create(playlist, object : GenericCallback {
                         override fun onSuccess() {
@@ -275,7 +283,7 @@ class PlaylistIdsFragment : RecyclerViewFragment<PlayFragment>() {
 
     private fun createPlaylistIds(name: String?): PlaylistIds {
         val playlistIds = PlaylistIds()
-        playlistIds.apikey = user!!.apikey
+        playlistIds.apikey = user.apikey
         playlistIds.name = name
         playlistIds.ids = ArrayList()
         for (result in playlistResults!!.songs!!) {

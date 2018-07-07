@@ -30,7 +30,8 @@ class Request internal constructor() : Closeable {
 
         try {
             connection = URL(url).openConnection() as HttpURLConnection
-            connection!!.connectTimeout = 5000
+            connection!!.connectTimeout = 3000
+            connection!!.instanceFollowRedirects = false
             if (contentType != null) {
                 connection!!.setRequestProperty("Content-Type", contentType)
             }

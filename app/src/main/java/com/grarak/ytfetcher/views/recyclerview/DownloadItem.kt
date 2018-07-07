@@ -29,7 +29,7 @@ class DownloadItem(private val result: YoutubeSearchResult, private val download
         val text = viewHolder.itemView.findViewById<TextView>(R.id.title)
         text.text = result.title
 
-        viewHolder.itemView.findViewById<View>(R.id.menu).setOnClickListener({ v ->
+        viewHolder.itemView.findViewById<View>(R.id.menu).setOnClickListener { v ->
             if (selected) return@setOnClickListener
 
             val popupMenu = PopupMenu(v.context, v)
@@ -45,7 +45,7 @@ class DownloadItem(private val result: YoutubeSearchResult, private val download
                 false
             }
             popupMenu.show()
-        })
+        }
 
         viewHolder.itemView.setOnClickListener { downloadListener.onClick(this) }
         viewHolder.itemView.setOnLongClickListener {

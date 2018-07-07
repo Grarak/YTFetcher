@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.support.v7.app.AlertDialog
 import android.support.v7.widget.LinearLayoutManager
 import com.grarak.ytfetcher.R
+import com.grarak.ytfetcher.fragments.titles.TitleFragment
 import com.grarak.ytfetcher.utils.Utils
 import com.grarak.ytfetcher.utils.server.GenericCallback
 import com.grarak.ytfetcher.utils.server.playlist.*
@@ -39,15 +40,15 @@ class UsersFragment : RecyclerViewFragment<TitleFragment>() {
         get() = getString(R.string.no_users)
 
     override fun createLayoutManager(): LinearLayoutManager {
-        return LinearLayoutManager(activity)
+        return LinearLayoutManager(requireActivity())
     }
 
     override fun init(savedInstanceState: Bundle?) {
         if (userServer != null) return
 
-        userServer = UserServer(activity!!)
-        playlistServer = PlaylistServer(activity!!)
-        youtubeServer = YoutubeServer(activity!!)
+        userServer = UserServer(requireActivity())
+        playlistServer = PlaylistServer(requireActivity())
+        youtubeServer = YoutubeServer(requireActivity())
         loadNextPage()
     }
 
@@ -57,7 +58,7 @@ class UsersFragment : RecyclerViewFragment<TitleFragment>() {
         if (limitReached || loading) return
 
         loading = true
-        userServer!!.list(user!!, ++page, object : UserServer.UsersCallback {
+        userServer!!.list(user, ++page, object : UserServer.UsersCallback {
             override fun onSuccess(users: List<User>) {
                 if (!isAdded) return
 
@@ -68,14 +69,14 @@ class UsersFragment : RecyclerViewFragment<TitleFragment>() {
                 }
 
                 for (user in users) {
-                    addItem(UserItem(this@UsersFragment.user!!.admin, user, object : UserItem.UserListener {
+                    addItem(UserItem(this@UsersFragment.user.admin, user, object : UserItem.UserListener {
                         override fun onClick(item: UserItem) {
-                            if (user.name == this@UsersFragment.user!!.name) return
+                            if (user.name == this@UsersFragment.user.name) return
 
                             showProgress()
 
                             val playlist = Playlist()
-                            playlist.apikey = this@UsersFragment.user!!.apikey
+                            playlist.apikey = this@UsersFragment.user.apikey
                             playlist.name = user.name
 
                             playlistServer!!.listPublic(playlist, object : PlaylistServer.PlaylistListCallback {
@@ -99,7 +100,7 @@ class UsersFragment : RecyclerViewFragment<TitleFragment>() {
 
                         override fun onVerified(item: UserItem, verified: Boolean) {
                             val newUser = User()
-                            newUser.apikey = this@UsersFragment.user!!.apikey
+                            newUser.apikey = this@UsersFragment.user.apikey
                             newUser.name = user.name
                             newUser.verified = verified
 
@@ -151,12 +152,12 @@ class UsersFragment : RecyclerViewFragment<TitleFragment>() {
                     showProgress()
 
                     val playlistPublic = PlaylistPublic()
-                    playlistPublic.apikey = this@UsersFragment.user!!.apikey
+                    playlistPublic.apikey = this@UsersFragment.user.apikey
                     playlistPublic.name = user.name
                     playlistPublic.playlist = playlistNames[which]
                     playlistServer!!.listPlaylistIdsPublic(playlistPublic, object : PlaylistServer.PlayListIdsCallback {
                         override fun onSuccess(ids: List<String>) {
-                            if (ids.size == 0) {
+                            if (ids.isEmpty()) {
                                 dismissProgress()
                                 Utils.toast(R.string.no_songs, activity!!)
                                 return
@@ -206,7 +207,7 @@ class UsersFragment : RecyclerViewFragment<TitleFragment>() {
 
                         private fun showPlaylist(playlistResults: PlaylistResults) {
                             showForegroundFragment(
-                                    PlaylistIdsFragment.newInstance(this@UsersFragment.user!!,
+                                    PlaylistIdsFragment.newInstance(this@UsersFragment.user,
                                             playlistResults, true))
                         }
                     })

@@ -8,16 +8,16 @@ import android.webkit.WebView
 
 class LicenseFragment : BaseFragment() {
 
-    private var webView: WebView? = null
+    private lateinit var webView: WebView
 
     override fun onCreateView(inflater: LayoutInflater,
                               container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         webView = WebView(activity)
-        webView!!.loadUrl("file:///android_asset/licenses.html")
+        webView.loadUrl("file:///android_asset/licenses.html")
 
         if (savedInstanceState != null) {
-            webView!!.scrollTo(savedInstanceState.getInt("scrollX"),
+            webView.scrollTo(savedInstanceState.getInt("scrollX"),
                     savedInstanceState.getInt("scrollY"))
         }
 
@@ -26,7 +26,7 @@ class LicenseFragment : BaseFragment() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState.putInt("scrollX", webView!!.scrollX)
-        outState.putInt("scrollY", webView!!.scrollY)
+        outState.putInt("scrollX", webView.scrollX)
+        outState.putInt("scrollY", webView.scrollY)
     }
 }

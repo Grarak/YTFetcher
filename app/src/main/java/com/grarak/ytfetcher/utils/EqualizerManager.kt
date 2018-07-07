@@ -18,19 +18,20 @@ class EqualizerManager(private val context: Context) {
     private var audioSessionId: Int = 0
 
     val numberOfBands: Int
-        get() = equalizer!!.numberOfBands.toInt()
+        get() = equalizer?.numberOfBands?.toInt() ?: 0
 
     val bandLevelLower: Int
-        get() = equalizer!!.bandLevelRange[0].toInt()
+        get() = equalizer?.bandLevelRange?.get(0)?.toInt() ?: 0
 
     val bandLevelUpper: Int
-        get() = equalizer!!.bandLevelRange[1].toInt()
+        get() = equalizer?.bandLevelRange?.get(1)?.toInt() ?: 0
 
     val numberOfBandPresets: Int
-        get() = equalizer!!.numberOfPresets + 1
+        get() = (equalizer?.numberOfPresets ?: 0) + 1
 
     var bandPreset: Int
-        get() = Prefs.getInt("band_level_preset", equalizer!!.currentPreset.toInt(), context) + 1
+        get() = Prefs.getInt("band_level_preset", equalizer?.currentPreset?.toInt()
+                ?: -1, context) + 1
         set(preset) {
             Prefs.saveBoolean("use_band_level_preset", true, context)
             Prefs.saveInt("band_level_preset", preset - 1, context)
@@ -46,7 +47,8 @@ class EqualizerManager(private val context: Context) {
         get() = 1000
 
     var bassBoostStrength: Int
-        get() = Prefs.getInt("bassboost_strength", bassBoost!!.roundedStrength.toInt(), context)
+        get() = Prefs.getInt("bassboost_strength", bassBoost?.roundedStrength?.toInt()
+                ?: 0, context)
         set(strength) {
             Prefs.saveInt("bassboost_strength", strength, context)
             if (audioSessionId != 0) {
@@ -58,7 +60,7 @@ class EqualizerManager(private val context: Context) {
         get() = context.resources.getStringArray(R.array.reverb_presets).size
 
     var reverbPreset: Int
-        get() = Prefs.getInt("reverb_preset", presetReverb!!.preset.toInt(), context)
+        get() = Prefs.getInt("reverb_preset", presetReverb?.preset?.toInt() ?: 0, context)
         set(preset) {
             Prefs.saveInt("reverb_preset", preset, context)
             if (audioSessionId != 0) {
@@ -74,7 +76,7 @@ class EqualizerManager(private val context: Context) {
 
     var virtualizerStrength: Int
         get() = Prefs.getInt("virtualizer_strength",
-                virtualizer!!.roundedStrength.toInt(), context)
+                virtualizer?.roundedStrength?.toInt() ?: 0, context)
         set(strength) {
             Prefs.saveInt("virtualizer_strength", strength, context)
             if (audioSessionId != 0) {
@@ -83,11 +85,13 @@ class EqualizerManager(private val context: Context) {
         }
 
     init {
-
-        equalizer = Equalizer(0, 0)
-        bassBoost = BassBoost(0, 0)
-        presetReverb = PresetReverb(0, 0)
-        virtualizer = Virtualizer(0, 0)
+        try {
+            equalizer = Equalizer(0, 0)
+            bassBoost = BassBoost(0, 0)
+            presetReverb = PresetReverb(0, 0)
+            virtualizer = Virtualizer(0, 0)
+        } catch (ignored: IllegalArgumentException) {
+        }
     }
 
     fun setAudioSessionId(id: Int) {
@@ -96,25 +100,29 @@ class EqualizerManager(private val context: Context) {
 
         release()
 
-        equalizer = Equalizer(0, id)
-        bassBoost = BassBoost(0, id)
-        presetReverb = PresetReverb(0, id)
-        virtualizer = Virtualizer(0, id)
+        try {
+            equalizer = Equalizer(0, id)
+            bassBoost = BassBoost(0, id)
+            presetReverb = PresetReverb(0, id)
+            virtualizer = Virtualizer(0, id)
+        } catch (ignored: IllegalArgumentException) {
+        }
 
-        equalizer!!.enabled = true
-        bassBoost!!.enabled = true
-        presetReverb!!.enabled = true
-        virtualizer!!.enabled = true
+        equalizer?.enabled = true
+        bassBoost?.enabled = true
+        presetReverb?.enabled = true
+        virtualizer?.enabled = true
 
         apply()
     }
 
     fun getBandLevel(band: Int): Int {
-        return Prefs.getInt("band_level_$band", equalizer!!.getBandLevel(band.toShort()).toInt(), context)
+        return Prefs.getInt("band_level_$band", equalizer?.getBandLevel(band.toShort())?.toInt()
+                ?: 0, context)
     }
 
     fun getBandLevelCenterFreq(band: Int): Int {
-        return equalizer!!.getCenterFreq(band.toShort())
+        return equalizer?.getCenterFreq(band.toShort()) ?: 0
     }
 
     fun setBandLevel(band: Int, level: Int) {
@@ -126,7 +134,8 @@ class EqualizerManager(private val context: Context) {
     }
 
     fun getBandPresetName(preset: Int): String {
-        return if (preset == 0) "Custom" else equalizer!!.getPresetName((preset - 1).toShort())
+        return if (preset == 0) "Custom" else equalizer?.getPresetName((preset - 1).toShort())
+                ?: "Unknown"
     }
 
     fun getReverbPresetName(preset: Int): String {
@@ -134,44 +143,53 @@ class EqualizerManager(private val context: Context) {
     }
 
     private fun apply() {
-        val useBandPreset = Prefs.getBoolean("use_band_level_preset", false, context)
-        if (useBandPreset) {
-            val bandLevelPreset = Prefs.getInt("band_level_preset", Integer.MIN_VALUE, context)
-            if (bandLevelPreset != Integer.MIN_VALUE && bandLevelPreset >= 0) {
-                equalizer!!.usePreset(bandLevelPreset.toShort())
-            }
-            for (i in 0 until numberOfBands) {
-                Prefs.remove("band_level_$i", context)
-            }
-        } else {
-            for (i in 0 until numberOfBands) {
-                val level = Prefs.getInt("band_level_$i", Integer.MIN_VALUE, context)
-                if (level != Integer.MIN_VALUE) {
-                    equalizer!!.setBandLevel(i.toShort(), level.toShort())
+        equalizer?.run {
+
+            val useBandPreset = Prefs.getBoolean("use_band_level_preset", false, context)
+            if (useBandPreset) {
+                val bandLevelPreset = Prefs.getInt("band_level_preset", Integer.MIN_VALUE, context)
+                if (bandLevelPreset != Integer.MIN_VALUE && bandLevelPreset >= 0) {
+                    usePreset(bandLevelPreset.toShort())
+                }
+                for (i in 0 until numberOfBands) {
+                    Prefs.remove("band_level_$i", context)
+                }
+            } else {
+                for (i in 0 until numberOfBands) {
+                    val level = Prefs.getInt("band_level_$i", Integer.MIN_VALUE, context)
+                    if (level != Integer.MIN_VALUE) {
+                        setBandLevel(i.toShort(), level.toShort())
+                    }
                 }
             }
         }
 
-        val bassBoostStrength = Prefs.getInt("bassboost_strength", Integer.MIN_VALUE, context)
-        if (bassBoostStrength != Integer.MIN_VALUE) {
-            bassBoost!!.setStrength(bassBoostStrength.toShort())
+        bassBoost?.run {
+            val bassBoostStrength = Prefs.getInt("bassboost_strength", Integer.MIN_VALUE, context)
+            if (bassBoostStrength != Integer.MIN_VALUE) {
+                setStrength(bassBoostStrength.toShort())
+            }
         }
 
-        val reverbPreset = Prefs.getInt("reverb_preset", Integer.MIN_VALUE, context)
-        if (reverbPreset != Integer.MIN_VALUE) {
-            presetReverb!!.preset = reverbPreset.toShort()
+        presetReverb?.run {
+            val reverbPreset = Prefs.getInt("reverb_preset", Integer.MIN_VALUE, context)
+            if (reverbPreset != Integer.MIN_VALUE) {
+                preset = reverbPreset.toShort()
+            }
         }
 
-        val virtualizerStrength = Prefs.getInt("virtualizer_strength", Integer.MIN_VALUE, context)
-        if (virtualizerStrength != Integer.MIN_VALUE) {
-            virtualizer!!.setStrength(virtualizerStrength.toShort())
+        virtualizer?.run {
+            val virtualizerStrength = Prefs.getInt("virtualizer_strength", Integer.MIN_VALUE, context)
+            if (virtualizerStrength != Integer.MIN_VALUE) {
+                setStrength(virtualizerStrength.toShort())
+            }
         }
     }
 
     fun release() {
-        equalizer!!.release()
-        bassBoost!!.release()
-        presetReverb!!.release()
-        virtualizer!!.release()
+        equalizer?.release()
+        bassBoost?.release()
+        presetReverb?.release()
+        virtualizer?.release()
     }
 }

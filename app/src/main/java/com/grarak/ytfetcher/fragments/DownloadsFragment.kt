@@ -6,6 +6,7 @@ import android.support.v7.widget.LinearLayoutManager
 import android.view.View
 import com.grarak.ytfetcher.MainActivity
 import com.grarak.ytfetcher.R
+import com.grarak.ytfetcher.fragments.titles.TitleFragment
 import com.grarak.ytfetcher.utils.Utils
 import com.grarak.ytfetcher.utils.server.user.User
 import com.grarak.ytfetcher.utils.server.youtube.Youtube

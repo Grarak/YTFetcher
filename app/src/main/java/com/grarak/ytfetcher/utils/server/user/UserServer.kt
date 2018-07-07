@@ -64,7 +64,6 @@ class UserServer(url: String) : Server(url) {
                                    headers: Map<String, List<String>>, response: String) {
                 if (status == HttpURLConnection.HTTP_OK) {
                     val listType = object : TypeToken<List<User>>() {
-
                     }.type
                     val results = GsonBuilder().create().fromJson<List<User>>(response, listType)
                     usersCallback.onSuccess(results)

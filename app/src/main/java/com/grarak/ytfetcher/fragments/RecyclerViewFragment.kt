@@ -22,9 +22,9 @@ abstract class RecyclerViewFragment<TF : BaseFragment> : BaseFragment() {
     protected var recyclerViewAdapter: RecyclerViewAdapter? = null
         private set
 
-    protected var rootView: View? = null
+    protected lateinit var rootView: View
         private set
-    protected var recyclerView: RecyclerView? = null
+    protected lateinit var recyclerView: RecyclerView
         private set
     private var layoutManager: LinearLayoutManager? = null
     private var messageView: TextView? = null
@@ -59,10 +59,10 @@ abstract class RecyclerViewFragment<TF : BaseFragment> : BaseFragment() {
         private var bottomTranslation: Int = 0
 
         private fun getScrollDistance(): Int {
-            return recyclerView!!.computeVerticalScrollOffset()
+            return recyclerView.computeVerticalScrollOffset()
         }
 
-        override fun onScrolled(recyclerView: RecyclerView?, dx: Int, dy: Int) {
+        override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
             super.onScrolled(recyclerView, dx, dy)
 
             scrollDistance = getScrollDistance()
@@ -77,7 +77,7 @@ abstract class RecyclerViewFragment<TF : BaseFragment> : BaseFragment() {
                 titleContent!!.translationY = (-scrollDistance / 2).toFloat()
             }
 
-            if (bottomNavigationView == null || recyclerView!!.paddingBottom == 0) {
+            if (bottomNavigationView == null || recyclerView.paddingBottom == 0) {
                 return
             }
             if (bottomTranslation > bottomNavigationView!!.height) {
@@ -88,11 +88,11 @@ abstract class RecyclerViewFragment<TF : BaseFragment> : BaseFragment() {
             bottomNavigationView!!.translationY = bottomTranslation.toFloat()
         }
 
-        override fun onScrollStateChanged(recyclerView: RecyclerView?, newState: Int) {
+        override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
             super.onScrollStateChanged(recyclerView, newState)
 
             if (bottomNavigationView == null || newState != 0 || bottomTranslation == 0
-                    || recyclerView!!.paddingBottom == 0) {
+                    || recyclerView.paddingBottom == 0) {
                 return
             }
 
@@ -124,23 +124,23 @@ abstract class RecyclerViewFragment<TF : BaseFragment> : BaseFragment() {
 
         rootView = inflater.inflate(layoutXml, container, false)
 
-        recyclerView = rootView!!.findViewById(R.id.recyclerview)
-        recyclerView!!.setHasFixedSize(true)
+        recyclerView = rootView.findViewById(R.id.recyclerview)
+        recyclerView.setHasFixedSize(true)
 
         layoutManager = createLayoutManager()
-        recyclerView!!.layoutManager = layoutManager
+        recyclerView.layoutManager = layoutManager
         if (recyclerViewAdapter == null) {
             recyclerViewAdapter = createAdapter()
         }
-        recyclerView!!.adapter = recyclerViewAdapter
+        recyclerView.adapter = recyclerViewAdapter
 
-        messageView = rootView!!.findViewById(R.id.message)
-        progressView = rootView!!.findViewById(R.id.progress)
+        messageView = rootView.findViewById(R.id.message)
+        progressView = rootView.findViewById(R.id.progress)
         if (messageView != null) {
             messageView!!.text = emptyViewsMessage
         }
 
-        titleContent = rootView!!.findViewById(R.id.content_title)
+        titleContent = rootView.findViewById(R.id.content_title)
 
         var titleFragment = titleFragment
         if (titleFragment == null && titleFragmentClass != null) {
@@ -213,34 +213,31 @@ abstract class RecyclerViewFragment<TF : BaseFragment> : BaseFragment() {
     }
 
     override fun onViewFinished() {
-        var leftPadding = recyclerView!!.paddingLeft
-        var rightPadding = recyclerView!!.paddingRight
+        var leftPadding = recyclerView.paddingLeft
+        var rightPadding = recyclerView.paddingRight
         if (Utils.isLandscape(activity!!)) {
             leftPadding = resources.getDimensionPixelSize(
                     R.dimen.recyclerview_padding)
             rightPadding = leftPadding
         }
 
-        var titleHeight = 0
-        if (titleContent != null) {
-            titleHeight = titleContent!!.height
-        }
-        recyclerView!!.setPadding(
+        val titleHeight = titleContent?.height ?: 0
+        recyclerView.setPadding(
                 leftPadding,
-                recyclerView!!.paddingTop + titleHeight,
+                recyclerView.paddingTop + titleHeight,
                 rightPadding,
-                recyclerView!!.paddingBottom
+                recyclerView.paddingBottom
         )
 
-        recyclerView!!.scrollToPosition(firstVisibleItem)
-        if (!recyclerView!!.clipToPadding) {
-            recyclerView!!.addOnScrollListener(onScrollListener)
+        recyclerView.scrollToPosition(firstVisibleItem)
+        if (!recyclerView.clipToPadding) {
+            recyclerView.addOnScrollListener(onScrollListener)
         }
 
-        if (titleContent != null) {
-            recyclerView!!.setOnTouchListener { _, event ->
+        titleContent?.run {
+            recyclerView.setOnTouchListener { _, motionEvent ->
                 if (progressView == null || progressView!!.visibility == View.INVISIBLE) {
-                    titleContent!!.dispatchTouchEvent(event)
+                    dispatchTouchEvent(motionEvent)
                 }
                 false
             }
@@ -292,7 +289,7 @@ abstract class RecyclerViewFragment<TF : BaseFragment> : BaseFragment() {
         if (progressView != null) {
             synchronized(this) {
                 progressCount++
-                recyclerView!!.visibility = View.INVISIBLE
+                recyclerView.visibility = View.INVISIBLE
                 if (messageView != null) {
                     messageView!!.visibility = View.INVISIBLE
                 }
@@ -309,7 +306,7 @@ abstract class RecyclerViewFragment<TF : BaseFragment> : BaseFragment() {
             synchronized(this) {
                 progressCount--
                 if (progressCount <= 0) {
-                    recyclerView!!.visibility = View.VISIBLE
+                    recyclerView.visibility = View.VISIBLE
                     if (messageView != null) {
                         messageView!!.visibility = if (progressView!!.visibility == View.INVISIBLE && itemsSize() == 0)
                             View.VISIBLE

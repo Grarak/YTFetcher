@@ -1,6 +1,7 @@
 package com.grarak.ytfetcher.views.recyclerview
 
 import android.support.v7.widget.AppCompatImageView
+import android.support.v7.widget.CardView
 import android.support.v7.widget.PopupMenu
 import android.support.v7.widget.RecyclerView
 import android.view.View
@@ -30,14 +31,15 @@ class MusicItem(val result: YoutubeSearchResult,
     }
 
     override fun bindViewHolder(viewHolder: RecyclerView.ViewHolder) {
+        val thumbnailParent = viewHolder.itemView.findViewById<CardView>(R.id.thumbnail_parent)
         val thumbnail = viewHolder.itemView.findViewById<ImageView>(R.id.thumbnail)
         downloaded = viewHolder.itemView.findViewById(R.id.downloaded_text)
         val title = viewHolder.itemView.findViewById<TextView>(R.id.title)
         val summary = viewHolder.itemView.findViewById<TextView>(R.id.summary)
         val menu = viewHolder.itemView.findViewById<AppCompatImageView>(R.id.menu)
 
-        viewHolder.itemView.setOnClickListener { musicListener.onClick(this) }
-        viewHolder.itemView.setOnLongClickListener {
+        thumbnailParent.setOnClickListener { musicListener.onClick(this) }
+        thumbnailParent.setOnLongClickListener {
             menu.performClick()
             true
         }

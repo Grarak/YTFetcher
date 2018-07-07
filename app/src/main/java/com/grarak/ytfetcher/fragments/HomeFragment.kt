@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.LinearLayoutManager
 import com.grarak.ytfetcher.R
+import com.grarak.ytfetcher.fragments.titles.TitleFragment
 import com.grarak.ytfetcher.utils.server.youtube.Youtube
 import com.grarak.ytfetcher.utils.server.youtube.YoutubeCharts
 import com.grarak.ytfetcher.utils.server.youtube.YoutubeSearchResult
@@ -32,7 +33,7 @@ class HomeFragment : RecyclerViewFragment<TitleFragment>() {
         server = YoutubeServer(activity!!)
 
         val youtube = Youtube()
-        youtube.apikey = user!!.apikey
+        youtube.apikey = user.apikey
         server!!.getCharts(youtube, object : YoutubeServer.YoutubeChartsCallback {
 
             override fun onSuccess(youtubeCharts: YoutubeCharts) {
@@ -67,7 +68,7 @@ class HomeFragment : RecyclerViewFragment<TitleFragment>() {
                         }
                     }, true))
                 }
-                youtubeCharts.save(activity!!)
+                youtubeCharts.save(requireActivity())
             }
         })
     }
@@ -103,8 +104,6 @@ class HomeFragment : RecyclerViewFragment<TitleFragment>() {
     override fun onDestroy() {
         super.onDestroy()
 
-        if (server != null) {
-            server!!.close()
-        }
+        server?.close()
     }
 }

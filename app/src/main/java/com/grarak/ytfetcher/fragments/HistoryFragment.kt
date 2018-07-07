@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
 import com.grarak.ytfetcher.MainActivity
 import com.grarak.ytfetcher.R
+import com.grarak.ytfetcher.fragments.titles.TitleFragment
 import com.grarak.ytfetcher.utils.Utils
 import com.grarak.ytfetcher.utils.server.history.HistoryServer
 import com.grarak.ytfetcher.utils.server.user.User

@@ -1,4 +1,4 @@
-package com.grarak.ytfetcher.fragments
+package com.grarak.ytfetcher.fragments.titles
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -23,7 +23,7 @@ class PlayFragment : TitleFragment() {
             setDownloadButton()
         }
     private var downloadButton: FloatingActionButton? = null
-    private var downloadDrawable: Bitmap? = null
+    private var downloadBitmap: Bitmap? = null
     private var saveDrawable: Drawable? = null
 
     override val layoutXml: Int = R.layout.fragment_play
@@ -64,18 +64,15 @@ class PlayFragment : TitleFragment() {
 
     private fun setDownloadButton() {
         downloadButton?.run {
-            if (saveDrawable == null) {
-                saveDrawable = ContextCompat.getDrawable(activity!!, R.drawable.ic_save)
-                DrawableCompat.setTint(saveDrawable!!, Color.WHITE)
-            }
+            DrawableCompat.setTint(saveDrawable
+                    ?: ContextCompat.getDrawable(requireActivity(), R.drawable.ic_save)!!
+                            .also { saveDrawable = it }, Color.WHITE)
 
-            if (downloadDrawable == null) {
-                downloadDrawable = BitmapFactory.decodeResource(resources, R.drawable.ic_download)
-            }
             if (readyOnly) {
                 setImageDrawable(saveDrawable)
             } else {
-                setImageBitmap(downloadDrawable)
+                setImageBitmap(downloadBitmap ?: BitmapFactory.decodeResource(
+                        resources, R.drawable.ic_download).also { downloadBitmap = it })
             }
         }
     }

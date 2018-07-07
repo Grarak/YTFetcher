@@ -17,7 +17,7 @@ class EditTextView @JvmOverloads constructor(context: Context, attrs: AttributeS
         set(value) {
             textInputEditText.setText(value)
         }
-        get() = textInputEditText.text
+        get() = textInputEditText.text!!
 
     init {
 
