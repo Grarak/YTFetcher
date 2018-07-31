@@ -26,8 +26,8 @@ android {
         applicationId "com.grarak.ytfetcher"
         minSdkVersion 16
         targetSdkVersion 28
-        versionCode 20
-        versionName "0.6"
+        versionCode 21
+        versionName "0.6.1"
         vectorDrawables.useSupportLibrary = true
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
