@@ -29,10 +29,10 @@ class User : Gson() {
         }
 
         fun fromString(json: String?): User? {
-            try {
-                return GsonBuilder().create().fromJson(json, User::class.java)
+            return try {
+                GsonBuilder().create().fromJson(json, User::class.java)
             } catch (ignored: Exception) {
-                return null
+                null
             }
 
         }

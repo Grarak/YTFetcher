@@ -2,7 +2,9 @@ package com.grarak.ytfetcher.utils.server
 
 import android.os.Handler
 import android.os.Looper
-import java.io.*
+import java.io.Closeable
+import java.io.DataOutputStream
+import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.concurrent.atomic.AtomicBoolean
@@ -25,83 +27,69 @@ class Request internal constructor() : Closeable {
     internal fun doRequest(url: String, contentType: String?,
                            data: String?, requestCallback: RequestCallback) {
         closed.set(false)
-        var reader: BufferedReader? = null
         var outputStream: DataOutputStream? = null
 
         try {
             connection = URL(url).openConnection() as HttpURLConnection
-            connection!!.connectTimeout = 3000
-            connection!!.instanceFollowRedirects = false
-            if (contentType != null) {
-                connection!!.setRequestProperty("Content-Type", contentType)
-            }
-            if (data != null) {
-                connection!!.requestMethod = "POST"
-                connection!!.doOutput = true
-            } else {
-                connection!!.requestMethod = "GET"
-            }
-            connection!!.connect()
-
-            if (data != null) {
-                outputStream = DataOutputStream(connection!!.outputStream)
-                outputStream.writeBytes(data)
-                outputStream.flush()
-            }
-
-            val statusCode = connection!!.responseCode
-            when (statusCode) {
-                HttpURLConnection.HTTP_MOVED_PERM, HttpURLConnection.HTTP_MOVED_TEMP, HttpURLConnection.HTTP_SEE_OTHER -> {
-                    val newUrl = connection!!.getHeaderField("Location")
-                    if (newUrl == null) {
-                        handler.post { requestCallback.onFailure(this, null) }
-                    } else {
-                        doRequest(newUrl, contentType, data, requestCallback)
-                    }
-                    return
+            connection!!.run {
+                connectTimeout = 3000
+                instanceFollowRedirects = false
+                if (contentType != null) {
+                    setRequestProperty("Content-Type", contentType)
                 }
-            }
+                if (data != null) {
+                    requestMethod = "POST"
+                    doOutput = true
+                } else {
+                    requestMethod = "GET"
+                }
+                connect()
 
-            handler.post { requestCallback.onConnect(this, statusCode, url) }
-            val inputStream: InputStream
-            if (statusCode < 200 || statusCode >= 300) {
-                inputStream = connection!!.errorStream
-            } else {
-                inputStream = connection!!.inputStream
-            }
-            reader = BufferedReader(InputStreamReader(inputStream))
-            val response = StringBuilder()
-            var line = reader.readLine()
-            while (line != null) {
-                response.append(line).append("\n")
-                line = reader.readLine()
-            }
-            handler.post {
-                requestCallback.onSuccess(this, statusCode,
-                        connection!!.headerFields, response.toString())
+                if (data != null) {
+                    outputStream = DataOutputStream(getOutputStream())
+                    outputStream!!.run {
+                        writeBytes(data)
+                        flush()
+                    }
+                }
+
+                val statusCode = responseCode
+                when (statusCode) {
+                    HttpURLConnection.HTTP_MOVED_PERM,
+                    HttpURLConnection.HTTP_MOVED_TEMP,
+                    HttpURLConnection.HTTP_SEE_OTHER -> {
+                        val newUrl = getHeaderField("Location")
+                        if (newUrl == null) {
+                            handler.post { requestCallback.onFailure(this@Request, null) }
+                        } else {
+                            doRequest(newUrl, contentType, data, requestCallback)
+                        }
+                        return
+                    }
+                }
+
+                handler.post { requestCallback.onConnect(this@Request, statusCode, url) }
+                val inputStream = if (statusCode < 200 || statusCode >= 300) errorStream else inputStream
+
+                val response = inputStream.bufferedReader().use {
+                    it.readText()
+                }
+
+                handler.post {
+                    requestCallback.onSuccess(this@Request, statusCode,
+                            connection!!.headerFields, response)
+                }
             }
         } catch (e: IOException) {
             if (!closed.get()) {
                 handler.post { requestCallback.onFailure(this, e) }
             }
         } finally {
-            if (connection != null) {
-                connection!!.disconnect()
-            }
+            connection?.disconnect()
 
-            if (outputStream != null) {
-                try {
-                    outputStream.close()
-                } catch (ignored: IOException) {
-                }
-
-            }
-            if (reader != null) {
-                try {
-                    reader.close()
-                } catch (ignored: IOException) {
-                }
-
+            try {
+                outputStream?.close()
+            } catch (ignored: IOException) {
             }
         }
     }
@@ -109,9 +97,7 @@ class Request internal constructor() : Closeable {
     override fun close() {
         closed.set(true)
         Thread {
-            if (connection != null) {
-                connection!!.disconnect()
-            }
+            connection?.disconnect()
         }.start()
     }
 }

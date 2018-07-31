@@ -35,7 +35,6 @@ class Playlists internal constructor(json: String?) : Gson(), Iterable<Playlist>
     }
 
     companion object {
-
         fun restore(context: Context): Playlists {
             return Playlists(Prefs.getString("playlists", null, context))
         }

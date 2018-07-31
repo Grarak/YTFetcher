@@ -46,7 +46,7 @@ class MusicPlayerService : Service(), AudioManager.OnAudioFocusChangeListener, E
     private lateinit var audioManager: AudioManager
     var listener: MusicPlayerListener? = null
 
-    private var audioFocusRequest: AudioFocusRequest? = null
+    private lateinit var audioFocusRequest: AudioFocusRequest
 
     private val focusLock = Any()
     private var playbackDelayed: Boolean = false
@@ -202,9 +202,7 @@ class MusicPlayerService : Service(), AudioManager.OnAudioFocusChangeListener, E
             }
 
             override fun onFailure(code: Int) {
-                if (listener != null) {
-                    listener!!.onFailure(code, results, position)
-                }
+                listener?.onFailure(code, results, position)
                 synchronized(trackLock) {
                     if (moveOn()) {
                         playMusic(user, tracks, trackPosition + 1)
@@ -262,7 +260,7 @@ class MusicPlayerService : Service(), AudioManager.OnAudioFocusChangeListener, E
 
     private fun requestAudioFocus() {
         val ret: Int = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            audioManager.requestAudioFocus(audioFocusRequest!!)
+            audioManager.requestAudioFocus(audioFocusRequest)
         } else {
             audioManager.requestAudioFocus(this,
                     AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN)
@@ -297,9 +295,7 @@ class MusicPlayerService : Service(), AudioManager.OnAudioFocusChangeListener, E
     override fun onError(exoPlayer: ExoPlayerWrapper, error: ExoPlaybackException) {
         synchronized(trackLock) {
             if (trackPosition >= 0) {
-                if (listener != null) {
-                    listener!!.onFailure(Status.ServerOffline, tracks, trackPosition)
-                }
+                listener?.onFailure(Status.ServerOffline, tracks, trackPosition)
                 notification.showFailure(tracks[trackPosition])
                 if (moveOn()) {
                     playMusic(user, tracks, trackPosition + 1)
@@ -364,8 +360,9 @@ class MusicPlayerService : Service(), AudioManager.OnAudioFocusChangeListener, E
         historyServer.close()
         unregisterReceiver(receiver)
 
-        val am = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        am.abandonAudioFocus(this)
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            audioManager.abandonAudioFocus(this)
+        }
     }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
